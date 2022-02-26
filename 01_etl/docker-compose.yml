@@ -39,7 +39,7 @@ services:
     ports:
       - ${ES_PORT}:${ES_PORT}
     environment:
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
 
 volumes:
   static:
