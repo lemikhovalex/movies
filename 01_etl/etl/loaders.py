@@ -81,7 +81,7 @@ class FilmworkLoader(IPEMLoader):
     def enrich(self, ids: list) -> Tuple[list, bool]:
         return (ids, True)
 
-    def merge(self, ids: list) -> List[tuple]:
+    def merge(self, ids: list) -> Tuple[List[tuple], bool]:
         with self._connect.cursor() as cursor:
             query = """
                 SELECT
@@ -121,7 +121,7 @@ class FilmworkLoader(IPEMLoader):
                 logger.exception(str(exc_fetch))
                 raise ValueError(msg) from exc_fetch
             try:
-                fetched_ids = cursor.fetchmany(self.batch_size)
+                fetched_ids = cursor.fetchall()  # todo fetch all, really?
             except Exception as exc_fetch:  # todo error handling
                 msg = "Failed to execute following query: {q}".format(
                     q=query,
@@ -130,7 +130,7 @@ class FilmworkLoader(IPEMLoader):
                 logger.exception(str(exc_fetch))
                 raise ValueError(msg) from exc_fetch
             is_done = False
-            if len(fetched_ids) < self.batch_size:
+            if True:  #  len(fetched_ids) < self.batch_size:
                 self.state.set_state("offset", 0)
                 self.state.set_state(
                     "last_load",
