@@ -33,6 +33,13 @@ services:
       - 8000:8000
     depends_on:
       - backend
+  es:
+    container_name: elastic_search
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+    ports:
+      - ${ES_PORT}:${ES_PORT}
+    environment:
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
 
 volumes:
   static:
