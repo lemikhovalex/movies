@@ -18,7 +18,7 @@ def str_to_date_time(date_t: str) -> datetime.datetime:
     return datetime.datetime.strptime(date_t, FMT)
 
 
-class FilmworkLoader(IPEMLoader):
+class FilmworkExtracter(IPEMLoader):
     def __init__(self, pg_connection, batch_size: int = 100):
         self._connect = pg_connection
         self._last_modified = ""
