@@ -1,0 +1,39 @@
+version: '3'
+services:
+  backend:
+    container_name: my_django_admin
+    build:
+      context: .
+    volumes:
+      - static:/app/02_movies_admin/static
+    depends_on:
+      - db
+    ports:
+      - 80:80
+  db:
+    image: postgres:14.0-alpine
+    container_name: my_postgres_db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - admin_db:/var/lib/postgresql/data
+  nginx:
+    container_name: my_nginx
+    image: nginx:1.21.6
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static:/data/static
+    ports:
+      - 8000:8000
+    depends_on:
+      - backend
+
+volumes:
+  static:
+  admin_db:
