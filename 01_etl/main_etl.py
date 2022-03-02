@@ -14,7 +14,7 @@ def main():
         extracter = FilmworkExtracter(pg_connection=pg_conn, batch_size=2)
         extracted, is_all = extracter.extract()
     transformed = transformer.transform(extracted)
-    print(transformed)
+    print([es_data.json() for es_data in transformed])
 
 
 if __name__ == "__main__":
