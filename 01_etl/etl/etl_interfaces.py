@@ -20,7 +20,7 @@ class ITransformer(ABC):
     state: State
 
     @abstractmethod
-    def transform(self):
+    def transform(self, data: list) -> list:
         pass
 
 

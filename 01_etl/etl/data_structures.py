@@ -1,6 +1,8 @@
 import datetime
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, List
+
+from pydantic import BaseModel, Field
 
 from .etl_interfaces import WithQuery
 
@@ -44,3 +46,22 @@ class MergedFromPg(WithQuery):
     person_id: str
     person_full_name: str
     genre_name: str
+
+
+@dataclass
+class ESPerson:
+    id: str
+    name: str
+
+
+class ToES(BaseModel):
+    id: str = Field(alias="film_work_id")
+    imdb_rating: float
+    genre: List[str] = Field(alias="genre_name")
+    title: str
+    description: str
+    director: List[str] = Field(alias="directors")
+    actors_names: List[str]
+    writers_names: List[str]
+    actors: List[ESPerson]
+    writers: List[ESPerson]
