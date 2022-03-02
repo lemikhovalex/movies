@@ -28,7 +28,7 @@ class ILoader(ABC):
         pass
 
 
-class IPEMLoader(ILoader, ABC):
+class IPEMExtracter(IExtracter, ABC):
     state: State
 
     @abstractmethod
