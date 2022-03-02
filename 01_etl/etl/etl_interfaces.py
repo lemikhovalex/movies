@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import List, Tuple
 
-from state import State
+from .state import State
 
 
 class IExtracter(ABC):
@@ -32,16 +32,28 @@ class IPEMExtracter(IExtracter, ABC):
     state: State
 
     @abstractmethod
-    def produce(self):
+    def produce(self) -> Tuple[list, bool]:
         pass
 
     @abstractmethod
-    def enrich(self):
+    def enrich(self, ids: list) -> Tuple[list, bool]:
         pass
 
     @abstractmethod
-    def merge(self):
+    def merge(self, ids: list) -> Tuple[list, bool]:
         pass
+
+    def extract(self) -> Tuple[list, bool]:
+        is_all_produced = False
+        while not is_all_produced:
+            proxy_ids, is_all_produced = self.produce()
+            is_all_enriched = False
+            while not is_all_enriched:
+                target_ids, is_all_enriched = self.enrich(proxy_ids)
+                is_all_merged = False
+                while not is_all_merged:
+                    return self.merge(target_ids)
+        return ([], True)
 
 
 class IETL(ABC):
