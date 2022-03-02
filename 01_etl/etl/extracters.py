@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple
 from .data_structures import MergedFromPg
 from .etl_interfaces import IPEMExtracter
 from .state import JsonFileStorage, State
-from .transformers import MergedFromPg
 
 logger = logging.getLogger(__name__)
 
