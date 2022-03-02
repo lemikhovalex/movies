@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import ClassVar, Tuple
 
 from .state import State
+
+
+class WithQuery(ABC):
+    select_query: ClassVar[str]
 
 
 class IExtracter(ABC):

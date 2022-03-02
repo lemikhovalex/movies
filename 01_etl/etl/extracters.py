@@ -2,8 +2,10 @@ import datetime
 import logging
 from typing import List, Optional, Tuple
 
+from .data_structures import MergedFromPg
 from .etl_interfaces import IPEMExtracter
 from .state import JsonFileStorage, State
+from .transformers import MergedFromPg
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ def fetch_upd_ids_from_table(
         try:
             cursor.execute(
                 query,
-                (last_mod, state.get_state("offset"), batch_size),
+                (last_mod, state.get_state("prod_offset"), batch_size),
             )
         except Exception as exc_fetch:  # todo error handling
             msg = "Failed to execute following query: {q}".format(
@@ -64,38 +66,13 @@ def fetch_upd_ids_from_table(
 def merge_data_on_fw_ids(
     pg_connection,
     fw_ids: list,
-) -> Tuple[list, bool]:
+) -> Tuple[List[MergedFromPg], bool]:
     with pg_connection.cursor() as cursor:
-        query = """
-            SELECT
-                fw.id as fw_id,
-                fw.title,
-                fw.description,
-                fw.rating,
-                fw.type,
-                fw.created,
-                fw.modified,
-                pfw.role,
-                p.id,
-                p.full_name,
-                g.name
-            FROM content.film_work fw
-            LEFT JOIN content.person_film_work pfw
-                ON pfw.film_work_id = fw.id
-            LEFT JOIN content.person p
-                ON p.id = pfw.person_id
-            LEFT JOIN content.genre_film_work gfw
-                ON gfw.film_work_id = fw.id
-            LEFT JOIN content.genre g
-                ON g.id = gfw.genre_id
-            WHERE fw.id IN %s;
-        """
+        query = MergedFromPg.select_query
         try:
             cursor.execute(query, (tuple(fw_ids),))
         except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(
-                q=query,
-            )
+            msg = "Failed to execute following query: {q}".format(q=query)
             logger.info(msg)
             logger.exception(str(exc_fetch))
             raise ValueError(msg) from exc_fetch
@@ -109,6 +86,7 @@ def merge_data_on_fw_ids(
             logger.exception(str(exc_fetch))
             raise ValueError(msg) from exc_fetch
         # completed fine, have some more, now upd offset
+        fetched_data = [MergedFromPg(*args) for args in fetched_data]
         return (fetched_data, True)
 
 
@@ -206,7 +184,7 @@ class FilmworkExtracter(IPEMExtracter):
     def enrich(self, ids: list) -> Tuple[list, bool]:
         return (ids, True)
 
-    def merge(self, ids: list) -> Tuple[List[tuple], bool]:
+    def merge(self, ids: list) -> Tuple[List[MergedFromPg], bool]:
         return merge_data_on_fw_ids(pg_connection=self._connect, fw_ids=ids)
 
 
@@ -256,7 +234,7 @@ class GenreExtracter(IPEMExtracter):
             state=self.state,
         )
 
-    def merge(self, ids: list) -> Tuple[List[tuple], bool]:
+    def merge(self, ids: list) -> Tuple[List[MergedFromPg], bool]:
         return merge_data_on_fw_ids(
             pg_connection=self._connect,
             fw_ids=ids,
