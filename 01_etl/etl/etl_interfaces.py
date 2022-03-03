@@ -12,7 +12,7 @@ class IExtracter(ABC):
     state: State
 
     @abstractmethod
-    def extract(self):
+    def extract(self) -> Generator[list, None, None]:
         pass
 
 
@@ -30,30 +30,6 @@ class ILoader(ABC):
     @abstractmethod
     def load(self, data_to_load: list):
         pass
-
-
-class IPEMExtracter(IExtracter, ABC):
-    state: State
-
-    @abstractmethod
-    def produce(self) -> Tuple[list, bool]:
-        pass
-
-    @abstractmethod
-    def enrich(self, ids: list) -> list:
-        pass
-
-    @abstractmethod
-    def merge(self, ids: list) -> list:
-        pass
-
-    def extract(self) -> Generator[list, None, None]:
-        is_all_produced = False
-        while not is_all_produced:
-            proxy_ids, is_all_produced = self.produce()
-            target_ids = self.enrich(proxy_ids)
-
-            yield self.merge(target_ids)
 
 
 class IETL(ABC):

@@ -1,9 +1,10 @@
 import datetime
 import logging
-from typing import List, Optional, Tuple
+from abc import ABC, abstractmethod
+from typing import Generator, List, Optional, Tuple
 
 from .data_structures import MergedFromPg
-from .etl_interfaces import IPEMExtracter
+from .etl_interfaces import IExtracter
 from .state import JsonFileStorage, State
 
 logger = logging.getLogger(__name__)
@@ -143,6 +144,30 @@ def enrich(
         return fetched_ids
 
 
+class IPEMExtracter(IExtracter, ABC):
+    state: State
+
+    @abstractmethod
+    def produce(self) -> Tuple[list, bool]:
+        pass
+
+    @abstractmethod
+    def enrich(self, ids: list) -> list:
+        pass
+
+    @abstractmethod
+    def merge(self, ids: list) -> list:
+        pass
+
+    def extract(self) -> Generator[list, None, None]:
+        is_all_produced = False
+        while not is_all_produced:
+            proxy_ids, is_all_produced = self.produce()
+            target_ids = self.enrich(proxy_ids)
+
+            yield self.merge(target_ids)
+
+
 class FilmworkExtracter(IPEMExtracter):
     table = "film_work"
 
@@ -250,7 +275,7 @@ class GenreExtracter(IPEMExtracter):
         )
 
 
-class PersonExtracter(GenreExtracter):
+class PersonExtracter(IPEMExtracter):
     table = "person"
 
     def __init__(self, pg_connection, batch_size: int = 1):
