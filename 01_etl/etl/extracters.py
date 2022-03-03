@@ -68,7 +68,6 @@ def merge_data_on_fw_ids(
 ) -> List[MergedFromPg]:
     with pg_connection.cursor() as cursor:
         query = MergedFromPg.select_query
-        print(tuple(fw_ids))
         try:
             cursor.execute(
                 query,
