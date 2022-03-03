@@ -3,12 +3,15 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Generator, List, Optional, Tuple
 
+from psycopg2.errors import SyntaxError
+
 from .backoff import backoff
 from .data_structures import MergedFromPg
 from .etl_interfaces import IExtracter
 from .state import JsonFileStorage, State
+from .utils import process_exception
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("extracter.log")
 
 FMT = "%Y%m%d%H%M%S"  # ex. 20110104172008 -> Jan. 04, 2011 5:20:08pm
 INIT_DATE = datetime.datetime(2010, 2, 8, 1, 40, 27, 425337)
@@ -38,16 +41,18 @@ def fetch_upd_ids_from_table(
             tbl=table,
         )
         last_mod = str_to_date_time(state.get_state("last_load"))
-        # TODO try smth
-        cursor.execute(
-            query,
-            (last_mod, state.get_state("prod_offset"), batch_size),
-        )
+        # mind syntax
+        try:
+            cursor.execute(
+                query,
+                (last_mod, state.get_state("prod_offset"), batch_size),
+            )
+        except SyntaxError as excep:
+            process_exception(excep, logger)
 
-        # TODO try smth
         fetched_ids = cursor.fetchmany(batch_size)
-
         fetched_ids = [fetched_el[0] for fetched_el in fetched_ids]
+
         return fetched_ids
 
 
@@ -58,11 +63,14 @@ def merge_data_on_fw_ids(
 ) -> List[MergedFromPg]:
     with pg_connection.cursor() as cursor:
         query = MergedFromPg.select_query
-        # TODO try smth
-        cursor.execute(
-            query,
-            (tuple(fw_ids),),
-        )
+        # mind syntax
+        try:
+            cursor.execute(
+                query,
+                (tuple(fw_ids),),
+            )
+        except SyntaxError as excep:
+            process_exception(excep, logger)
 
         # TODO try smth
         fetched_data = cursor.fetchall()
@@ -97,12 +105,14 @@ def enrich(
             m2m_tbl=m2m_table,
         )
 
-        # TODO try: smths
-        cursor.execute(
-            query,
-            (tuple(ids),),
-        )
-        # TODO try smth
+        try:
+            cursor.execute(
+                query,
+                (tuple(ids),),
+            )
+        except SyntaxError as excep:
+            process_exception(excep, logger)
+
         fetched_ids = cursor.fetchall()
 
         # completed fine, have some more, now upd offset

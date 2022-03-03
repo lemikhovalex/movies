@@ -6,8 +6,9 @@ from elasticsearch import Elasticsearch, helpers
 
 from .data_structures import ToES
 from .etl_interfaces import ILoader
+from .utils import process_exception
 
-logging.basicConfig(filename="loader.log")
+logger = logging.getLogger("loader.log")
 
 
 class Loader(ILoader):
@@ -22,12 +23,15 @@ class Loader(ILoader):
             to_app = json.loads(datum.json())
             to_app["_id"] = datum.id
             actions.append(to_app)
-        # TODO try smth
-        helpers.bulk(
-            el_s_client,
-            actions,
-            index=self.index,
-        )
+        # if we dont match index we shall not wait, we better write
+        try:
+            helpers.bulk(
+                el_s_client,
+                actions,
+                index=self.index,
+            )
+        except helpers.BulkIndexError as excep:
+            process_exception(excep, logger)
 
     def save_state(self):
         pass

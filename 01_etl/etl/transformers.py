@@ -1,9 +1,13 @@
+import logging
 from typing import List
 
 import pandas as pd
 
 from .data_structures import ESPerson, MergedFromPg, ToES
 from .etl_interfaces import ITransformer
+from .utils import process_exception
+
+logger = logging.getLogger("transformer.log")
 
 
 def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
@@ -16,10 +20,15 @@ def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
         .drop_duplicates()
         .to_dict("records")
     )
-    return [
-        ESPerson(id=p["person_id"], name=p["person_full_name"])
-        for p in list_of_p
-    ]
+    # if we cant process data we
+    try:
+        out = [
+            ESPerson(id=p["person_id"], name=p["person_full_name"])
+            for p in list_of_p
+        ]
+    except Exception as excep:
+        process_exception(excep, logger)
+    return out
 
 
 def post_process_nan(v):
@@ -59,7 +68,11 @@ class PgToESTransformer(ITransformer):
                 "actors_names": [act.name for act in actors],
                 "writers_names": [writ.name for writ in writers],
             }
-            out.append(ToES.parse_obj(movie_data))
+            # if pydantic cant validate let's log it
+            try:
+                out.append(ToES.parse_obj(movie_data))
+            except Exception as excep:
+                process_exception(excep, logger)
         return out
 
     def save_state(self):
