@@ -175,3 +175,4 @@ Loading complete
 /02_movies_admin/config/.env
 /.idea
 static/
+*_state.json
