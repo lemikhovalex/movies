@@ -61,3 +61,6 @@ class PgToESTransformer(ITransformer):
             }
             out.append(ToES.parse_obj(movie_data))
         return out
+
+    def save_state(self):
+        pass

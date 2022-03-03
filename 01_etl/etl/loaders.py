@@ -34,3 +34,6 @@ class Loader(ILoader):
             )
             logging.warning(msg)
             logging.exception(str(exc))
+
+    def save_state(self):
+        pass

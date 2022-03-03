@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Generator, Tuple
+from typing import ClassVar, Generator
 
 from .state import State
 
@@ -15,12 +15,20 @@ class IExtracter(ABC):
     def extract(self) -> Generator[list, None, None]:
         pass
 
+    @abstractmethod
+    def save_state(self):
+        pass
+
 
 class ITransformer(ABC):
     state: State
 
     @abstractmethod
     def transform(self, data: list) -> list:
+        pass
+
+    @abstractmethod
+    def save_state(self):
         pass
 
 
@@ -31,6 +39,10 @@ class ILoader(ABC):
     def load(self, data_to_load: list):
         pass
 
+    @abstractmethod
+    def save_state(self):
+        pass
+
 
 class IETL(ABC):
     state: State
@@ -38,3 +50,11 @@ class IETL(ABC):
     extracter: IExtracter
     transformer: ITransformer
     loader: ILoader
+
+    @abstractmethod
+    def run(self):
+        pass
+
+    @abstractmethod
+    def save_state(self):
+        pass

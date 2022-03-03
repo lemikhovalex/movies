@@ -147,6 +147,9 @@ def enrich(
 class IPEMExtracter(IExtracter, ABC):
     state: State
 
+    def __init__(self):
+        self.state_to_upd = {}
+
     @abstractmethod
     def produce(self) -> Tuple[list, bool]:
         pass
@@ -167,59 +170,16 @@ class IPEMExtracter(IExtracter, ABC):
 
             yield self.merge(target_ids)
 
-
-class FilmworkExtracter(IPEMExtracter):
-    table = "film_work"
-
-    def __init__(self, pg_connection, batch_size: int = 1):
-        self._connect = pg_connection
-        self._last_modified = ""
-        self.batch_size = batch_size
-        storage = JsonFileStorage(
-            "{tbl}_loader_state.json".format(tbl=self.table),
-        )
-        self.state = State(storage)
-        self.state.set_state("prod_offset", 0)
-        self.state.set_state(
-            "last_load",
-            date_time_to_str(INIT_DATE),
-        )
-
-    def produce(self) -> Tuple[list, bool]:
-        out = fetch_upd_ids_from_table(
-            pg_connection=self._connect,
-            table=self.table,
-            batch_size=self.batch_size,
-            state=self.state,
-        )
-        is_done = False
-        if len(out) < self.batch_size:
-            is_done = True
-            new_offset = 0
-            self.state.set_state(
-                "last_load",
-                date_time_to_str(datetime.datetime.now()),
-            )
-        # completed fine, have some more, now upd offset
-        else:
-            offset_before = int(self.state.get_state("prod_offset"))
-            new_offset = offset_before + self.batch_size
-        self.state.set_state("prod_offset", new_offset)
-        return out, is_done
-
-    def enrich(self, ids: list) -> list:
-        return ids
-
-    def merge(self, ids: list) -> List[MergedFromPg]:
-        if len(ids) == 0:
-            return []
-        return merge_data_on_fw_ids(pg_connection=self._connect, fw_ids=ids)
+    @abstractmethod
+    def save_state(self):
+        pass
 
 
 class GenreExtracter(IPEMExtracter):
     table = "genre"
 
     def __init__(self, pg_connection, batch_size: int = 1):
+        super(GenreExtracter, self).__init__()
         self._connect = pg_connection
         self._last_modified = ""
         self.batch_size = batch_size
@@ -227,11 +187,14 @@ class GenreExtracter(IPEMExtracter):
             "{tbl}_loader_state.json".format(tbl=self.table),
         )
         self.state = State(storage)
-        self.state.set_state("prod_offset", 0)
-        self.state.set_state(
-            "last_load",
-            date_time_to_str(INIT_DATE),
-        )
+        if self.state.get_state("prod_offset") is None:
+            self.state.set_state("prod_offset", 0)
+
+        if self.state.get_state("last_load") is None:
+            self.state.set_state(
+                "last_load",
+                date_time_to_str(INIT_DATE),
+            )
 
     def produce(self) -> Tuple[list, bool]:
         out = fetch_upd_ids_from_table(
@@ -244,15 +207,14 @@ class GenreExtracter(IPEMExtracter):
         if len(out) < self.batch_size:
             is_done = True
             new_offset = 0
-            self.state.set_state(
-                "last_load",
-                date_time_to_str(datetime.datetime.now()),
+            self.state_to_upd["last_load"] = date_time_to_str(
+                datetime.datetime.now(),
             )
         # completed fine, have some more, now upd offset
         else:
             offset_before = int(self.state.get_state("prod_offset"))
             new_offset = offset_before + self.batch_size
-        self.state.set_state("prod_offset", new_offset)
+        self.state_to_upd["prod_offset"] = new_offset
         return out, is_done
 
     def enrich(self, ids: list) -> list:
@@ -274,8 +236,23 @@ class GenreExtracter(IPEMExtracter):
             fw_ids=ids,
         )
 
+    def save_state(self):
+        for key, val in self.state_to_upd.items():
+            self.state.set_state(key, val)
+        self.state_to_upd = {}
 
-class PersonExtracter(IPEMExtracter):
+
+class FilmworkExtracter(GenreExtracter):
+    table = "film_work"
+
+    def __init__(self, pg_connection, batch_size: int = 1):
+        super(FilmworkExtracter, self).__init__(pg_connection, batch_size)
+
+    def enrich(self, ids: list) -> list:
+        return ids
+
+
+class PersonExtracter(GenreExtracter):
     table = "person"
 
     def __init__(self, pg_connection, batch_size: int = 1):
