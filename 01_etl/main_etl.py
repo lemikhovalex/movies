@@ -1,30 +1,36 @@
-import json
-
 import psycopg2
 from psycopg2.extras import DictCursor
 
 from app.sqlite_to_postgres.loaders.settings import get_dsl
 from etl.extracters import FilmworkExtracter, GenreExtracter, PersonExtracter
 from etl.loaders import Loader
+from etl.pipelines import MoviesETL
 from etl.transformers import PgToESTransformer
 
 
 def main():
+    # create simple items - they do the same for all etls
     transformer = PgToESTransformer()
+    loader = Loader(index="movies")
     with psycopg2.connect(
         **get_dsl(".env"), cursor_factory=DictCursor
     ) as pg_conn:
+        # vary extractor for genre, fw, person
         for _i, extracter in enumerate(
             (
+                PersonExtracter(pg_connection=pg_conn, batch_size=40),
                 GenreExtracter(pg_connection=pg_conn, batch_size=1),
                 FilmworkExtracter(pg_connection=pg_conn, batch_size=10),
-                PersonExtracter(pg_connection=pg_conn, batch_size=1),
             ),
         ):
-            for extracted in extracter.extract():
-                transformed = transformer.transform(extracted)
-                loader = Loader(index="movies")
-                loader.load(transformed)
+            # combine etl
+            etl = MoviesETL(
+                extracter=extracter,
+                loader=loader,
+                transformer=transformer,
+            )
+            # and run it
+            etl.run()
             print(_i)
 
 
