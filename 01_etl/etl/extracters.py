@@ -3,6 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Generator, List, Optional, Tuple
 
+from .backoff import backoff
 from .data_structures import MergedFromPg
 from .etl_interfaces import IExtracter
 from .state import JsonFileStorage, State
@@ -21,6 +22,7 @@ def str_to_date_time(date_t: str) -> datetime.datetime:
     return datetime.datetime.strptime(date_t, FMT)
 
 
+@backoff()
 def fetch_upd_ids_from_table(
     pg_connection, table: str, batch_size: int, state: State
 ) -> list:
@@ -36,62 +38,40 @@ def fetch_upd_ids_from_table(
             tbl=table,
         )
         last_mod = str_to_date_time(state.get_state("last_load"))
-        try:
-            cursor.execute(
-                query,
-                (last_mod, state.get_state("prod_offset"), batch_size),
-            )
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(
-                q=query,
-            )
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
-        try:
-            fetched_ids = cursor.fetchmany(batch_size)
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(
-                q=query,
-            )
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
+        # TODO try smth
+        cursor.execute(
+            query,
+            (last_mod, state.get_state("prod_offset"), batch_size),
+        )
+
+        # TODO try smth
+        fetched_ids = cursor.fetchmany(batch_size)
 
         fetched_ids = [fetched_el[0] for fetched_el in fetched_ids]
         return fetched_ids
 
 
+@backoff()
 def merge_data_on_fw_ids(
     pg_connection,
     fw_ids: list,
 ) -> List[MergedFromPg]:
     with pg_connection.cursor() as cursor:
         query = MergedFromPg.select_query
-        try:
-            cursor.execute(
-                query,
-                (tuple(fw_ids),),
-            )
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(q=query)
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
-        try:
-            fetched_data = cursor.fetchall()  # todo fetch all, really?
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(
-                q=query,
-            )
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
+        # TODO try smth
+        cursor.execute(
+            query,
+            (tuple(fw_ids),),
+        )
+
+        # TODO try smth
+        fetched_data = cursor.fetchall()
         # completed fine, have some more, now upd offset
         fetched_data = [MergedFromPg(*args) for args in fetched_data]
         return fetched_data
 
 
+@backoff()
 def enrich(
     pg_connection,
     table: str,
@@ -117,27 +97,13 @@ def enrich(
             m2m_tbl=m2m_table,
         )
 
-        try:
-            cursor.execute(
-                query,
-                (tuple(ids),),
-            )
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to execute following query: {q}".format(
-                q=query,
-            )
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
-        try:
-            fetched_ids = cursor.fetchall()  # todo fetch all, really?
-        except Exception as exc_fetch:  # todo error handling
-            msg = "Failed to fetch from following query: {q}".format(
-                q=query,
-            )
-            logger.info(msg)
-            logger.exception(str(exc_fetch))
-            raise ValueError(msg) from exc_fetch
+        # TODO try: smths
+        cursor.execute(
+            query,
+            (tuple(ids),),
+        )
+        # TODO try smth
+        fetched_ids = cursor.fetchall()
 
         # completed fine, have some more, now upd offset
         fetched_ids = [fetched_el[0] for fetched_el in fetched_ids]

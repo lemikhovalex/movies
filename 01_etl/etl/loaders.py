@@ -22,18 +22,12 @@ class Loader(ILoader):
             to_app = json.loads(datum.json())
             to_app["_id"] = datum.id
             actions.append(to_app)
-        try:
-            n_sucsess, errors_descr = helpers.bulk(
-                el_s_client,
-                actions,
-                index=self.index,
-            )
-        except Exception as exc:
-            msg = "Failed to load following data:\n\n{d}".format(
-                d=actions,
-            )
-            logging.warning(msg)
-            logging.exception(str(exc))
+        # TODO try smth
+        helpers.bulk(
+            el_s_client,
+            actions,
+            index=self.index,
+        )
 
     def save_state(self):
         pass
