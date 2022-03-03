@@ -11,8 +11,8 @@ def main():
     with psycopg2.connect(
         **get_dsl(".env"), cursor_factory=DictCursor
     ) as pg_conn:
-        extracter = FilmworkExtracter(pg_connection=pg_conn, batch_size=2)
-        extracted, is_all = extracter.extract()
+        extracter = FilmworkExtracter(pg_connection=pg_conn, batch_size=1)
+        extracted = extracter.extract()
     transformed = transformer.transform(extracted)
     print([es_data.json() for es_data in transformed])
 

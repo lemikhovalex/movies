@@ -40,24 +40,20 @@ class IPEMExtracter(IExtracter, ABC):
         pass
 
     @abstractmethod
-    def enrich(self, ids: list) -> Tuple[list, bool]:
+    def enrich(self, ids: list) -> list:
         pass
 
     @abstractmethod
-    def merge(self, ids: list) -> Tuple[list, bool]:
+    def merge(self, ids: list) -> list:
         pass
 
-    def extract(self) -> Tuple[list, bool]:
+    def extract(self) -> list:
         is_all_produced = False
         while not is_all_produced:
             proxy_ids, is_all_produced = self.produce()
-            is_all_enriched = False
-            while not is_all_enriched:
-                target_ids, is_all_enriched = self.enrich(proxy_ids)
-                is_all_merged = False
-                while not is_all_merged:
-                    return self.merge(target_ids)
-        return ([], True)
+            target_ids = self.enrich(proxy_ids)
+            return self.merge(target_ids)
+        return []
 
 
 class IETL(ABC):

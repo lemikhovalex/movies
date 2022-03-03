@@ -65,11 +65,15 @@ def fetch_upd_ids_from_table(
 def merge_data_on_fw_ids(
     pg_connection,
     fw_ids: list,
-) -> Tuple[List[MergedFromPg], bool]:
+) -> List[MergedFromPg]:
     with pg_connection.cursor() as cursor:
         query = MergedFromPg.select_query
+        print(tuple(fw_ids))
         try:
-            cursor.execute(query, (tuple(fw_ids),))
+            cursor.execute(
+                query,
+                (tuple(fw_ids),),
+            )
         except Exception as exc_fetch:  # todo error handling
             msg = "Failed to execute following query: {q}".format(q=query)
             logger.info(msg)
@@ -86,7 +90,7 @@ def merge_data_on_fw_ids(
             raise ValueError(msg) from exc_fetch
         # completed fine, have some more, now upd offset
         fetched_data = [MergedFromPg(*args) for args in fetched_data]
-        return (fetched_data, True)
+        return fetched_data
 
 
 def enrich(
@@ -97,7 +101,7 @@ def enrich(
     state: State,
     field: Optional[str] = None,
     m2m_table: Optional[str] = None,
-):
+) -> list:
     with pg_connection.cursor() as cursor:
         if field is None:
             field = "{tbl}_id".format(tbl=table)
@@ -128,19 +132,11 @@ def enrich(
             logger.exception(str(exc_fetch))
             raise ValueError(msg) from exc_fetch
 
-        is_done = False
-        if len(fetched_ids) < batch_size:
-            state.set_state("offset", 0)
-            state.set_state(
-                "last_load",
-                date_time_to_str(datetime.datetime.now()),
-            )
-            is_done = True
         # completed fine, have some more, now upd offset
         offset_before = state.get_state("offset")
         state.set_state("offset", offset_before + batch_size)
         fetched_ids = [fetched_el[0] for fetched_el in fetched_ids]
-        return (fetched_ids, is_done)
+        return fetched_ids
 
 
 class FilmworkExtracter(IPEMExtracter):
@@ -180,10 +176,10 @@ class FilmworkExtracter(IPEMExtracter):
         self.state.set_state("prod_offset", new_offset)
         return out
 
-    def enrich(self, ids: list) -> Tuple[list, bool]:
-        return (ids, True)
+    def enrich(self, ids: list) -> list:
+        return ids
 
-    def merge(self, ids: list) -> Tuple[List[MergedFromPg], bool]:
+    def merge(self, ids: list) -> List[MergedFromPg]:
         return merge_data_on_fw_ids(pg_connection=self._connect, fw_ids=ids)
 
 
@@ -224,7 +220,7 @@ class GenreExtracter(IPEMExtracter):
         self.state.set_state("prod_offset", new_offset)
         return out
 
-    def enrich(self, ids: list) -> Tuple[list, bool]:
+    def enrich(self, ids: list) -> list:
         return enrich(
             pg_connection=self._connect,
             table=self.table,
@@ -233,7 +229,7 @@ class GenreExtracter(IPEMExtracter):
             state=self.state,
         )
 
-    def merge(self, ids: list) -> Tuple[List[MergedFromPg], bool]:
+    def merge(self, ids: list) -> List[MergedFromPg]:
         return merge_data_on_fw_ids(
             pg_connection=self._connect,
             fw_ids=ids,
