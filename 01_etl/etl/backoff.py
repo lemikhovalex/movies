@@ -22,15 +22,16 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
         def inner(*args, **kwargs):
             done = False
             delay = start_sleep_time
+            out = None
             while not done:
                 try:
-                    print("hello from inner")
-                    func(*args, **kwargs)
+                    out = func(*args, **kwargs)
                     done = True
-                except ConnectionError:
+                except Exception:
                     time.sleep(delay)
                     delay *= factor
                     delay = min(delay, border_sleep_time)
+            return out
 
         return inner
 
