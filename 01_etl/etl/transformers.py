@@ -22,8 +22,17 @@ def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
     ]
 
 
+def post_process_nan(v):
+    if pd.isna(v):
+        return None
+    else:
+        return v
+
+
 class PgToESTransformer(ITransformer):
     def transform(self, merged_data: List[MergedFromPg]) -> List[ToES]:
+        if len(merged_data) == 0:
+            return []
         df = pd.DataFrame(merged_data)
         movies_ids = df["film_work_id"].unique()
         out: List[ToES] = []
@@ -36,13 +45,17 @@ class PgToESTransformer(ITransformer):
             directors = filter_persons(df, "director")
             movie_data = {
                 "film_work_id": movie_id,
-                "imdb_rating": movie_df["imdb_rating"].values[0],
+                "imdb_rating": post_process_nan(
+                    movie_df["imdb_rating"].values[0]
+                ),
                 "genre_name": movie_df["genre_name"].unique().tolist(),
                 "title": movie_df["title"].values[0],
-                "description": movie_df["description"].values[0],
+                "description": post_process_nan(
+                    movie_df["description"].values[0]
+                ),
                 "actors": actors,
                 "writers": writers,
-                "directors": [dir.name for dir in directors],
+                "directors": [direct.name for direct in directors],
                 "actors_names": [act.name for act in actors],
                 "writers_names": [writ.name for writ in writers],
             }

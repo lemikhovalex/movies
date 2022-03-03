@@ -21,7 +21,6 @@ class Loader(ILoader):
         for datum in data_to_load:
             to_app = json.loads(datum.json())
             to_app["_id"] = datum.id
-            to_app["doc_type"] = "_doc"
             actions.append(to_app)
         try:
             n_sucsess, errors_descr = helpers.bulk(

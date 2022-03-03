@@ -14,10 +14,13 @@ def main():
     with psycopg2.connect(
         **get_dsl(".env"), cursor_factory=DictCursor
     ) as pg_conn:
-        for _i, ex_constr in enumerate(
-            (FilmworkExtracter, GenreExtracter, PersonExtracter)
+        for _i, extracter in enumerate(
+            (
+                GenreExtracter(pg_connection=pg_conn, batch_size=1),
+                FilmworkExtracter(pg_connection=pg_conn, batch_size=10),
+                PersonExtracter(pg_connection=pg_conn, batch_size=1),
+            ),
         ):
-            extracter = ex_constr(pg_connection=pg_conn)
             for extracted in extracter.extract():
                 transformed = transformer.transform(extracted)
                 loader = Loader(index="movies")

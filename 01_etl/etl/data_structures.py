@@ -56,10 +56,10 @@ class ESPerson:
 
 class ToES(BaseModel):
     id: str = Field(alias="film_work_id")
-    imdb_rating: Optional[float] = 10
+    imdb_rating: Optional[float]
     genre: List[str] = Field(alias="genre_name")
     title: str
-    description: Optional[str] = ""
+    description: Optional[str]
     director: List[str] = Field(alias="directors")
     actors_names: List[str]
     writers_names: List[str]

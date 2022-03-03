@@ -146,7 +146,7 @@ def enrich(
 class FilmworkExtracter(IPEMExtracter):
     table = "film_work"
 
-    def __init__(self, pg_connection, batch_size: int = 10):
+    def __init__(self, pg_connection, batch_size: int = 1):
         self._connect = pg_connection
         self._last_modified = ""
         self.batch_size = batch_size
@@ -186,6 +186,8 @@ class FilmworkExtracter(IPEMExtracter):
         return ids
 
     def merge(self, ids: list) -> List[MergedFromPg]:
+        if len(ids) == 0:
+            return []
         return merge_data_on_fw_ids(pg_connection=self._connect, fw_ids=ids)
 
 
@@ -229,6 +231,8 @@ class GenreExtracter(IPEMExtracter):
         return out, is_done
 
     def enrich(self, ids: list) -> list:
+        if len(ids) == 0:
+            return []
         return enrich(
             pg_connection=self._connect,
             table=self.table,
@@ -238,6 +242,8 @@ class GenreExtracter(IPEMExtracter):
         )
 
     def merge(self, ids: list) -> List[MergedFromPg]:
+        if len(ids) == 0:
+            return []
         return merge_data_on_fw_ids(
             pg_connection=self._connect,
             fw_ids=ids,
@@ -247,5 +253,5 @@ class GenreExtracter(IPEMExtracter):
 class PersonExtracter(GenreExtracter):
     table = "person"
 
-    def __init__(self, pg_connection, batch_size: int = 10):
+    def __init__(self, pg_connection, batch_size: int = 1):
         super(PersonExtracter, self).__init__(pg_connection, batch_size)
