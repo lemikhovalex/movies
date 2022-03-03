@@ -46,12 +46,12 @@ class PgToESTransformer(ITransformer):
             movie_data = {
                 "film_work_id": movie_id,
                 "imdb_rating": post_process_nan(
-                    movie_df["imdb_rating"].values[0]
+                    movie_df["imdb_rating"].values[0],
                 ),
                 "genre_name": movie_df["genre_name"].unique().tolist(),
                 "title": movie_df["title"].values[0],
                 "description": post_process_nan(
-                    movie_df["description"].values[0]
+                    movie_df["description"].values[0],
                 ),
                 "actors": actors,
                 "writers": writers,
