@@ -2,12 +2,14 @@ import psycopg2
 from psycopg2.extras import DictCursor
 
 from app.sqlite_to_postgres.loaders.settings import get_dsl
+from etl.backoff import backoff
 from etl.extracters import FilmworkExtracter, GenreExtracter, PersonExtracter
 from etl.loaders import Loader
 from etl.pipelines import MoviesETL
 from etl.transformers import PgToESTransformer
 
 
+@backoff()
 def main():
     # create simple items - they do the same for all etls
     transformer = PgToESTransformer()
@@ -18,7 +20,7 @@ def main():
         # vary extractor for genre, fw, person
         for _i, extracter in enumerate(
             (
-                PersonExtracter(pg_connection=pg_conn, batch_size=40),
+                PersonExtracter(pg_connection=pg_conn, batch_size=50),
                 GenreExtracter(pg_connection=pg_conn, batch_size=1),
                 FilmworkExtracter(pg_connection=pg_conn, batch_size=10),
             ),
