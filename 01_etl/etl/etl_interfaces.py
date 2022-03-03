@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Tuple
+from typing import ClassVar, Generator, Tuple
 
 from .state import State
 
@@ -28,7 +28,7 @@ class ILoader(ABC):
     state: State
 
     @abstractmethod
-    def load(self):
+    def load(self, data_to_load: list):
         pass
 
 
@@ -47,13 +47,13 @@ class IPEMExtracter(IExtracter, ABC):
     def merge(self, ids: list) -> list:
         pass
 
-    def extract(self) -> list:
+    def extract(self) -> Generator[list, None, None]:
         is_all_produced = False
         while not is_all_produced:
             proxy_ids, is_all_produced = self.produce()
             target_ids = self.enrich(proxy_ids)
-            return self.merge(target_ids)
-        return []
+
+            yield self.merge(target_ids)
 
 
 class IETL(ABC):
