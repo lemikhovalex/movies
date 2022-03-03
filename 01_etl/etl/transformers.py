@@ -4,14 +4,13 @@ import pandas as pd
 
 from .data_structures import ESPerson, MergedFromPg, ToES
 from .etl_interfaces import ITransformer
-from .state import JsonFileStorage, State
 
 
 def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
     persons = df[["person_id", "person_full_name", "role"]]
     list_of_p = (
         persons.query(
-            "role == '{role}'".format(role="writer"),
+            "role == '{role}'".format(role=role),
         )
         .drop(columns=["role"])
         .drop_duplicates()

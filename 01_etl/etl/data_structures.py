@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import ClassVar, List
+from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -56,10 +56,10 @@ class ESPerson:
 
 class ToES(BaseModel):
     id: str = Field(alias="film_work_id")
-    imdb_rating: float
+    imdb_rating: Optional[float] = 10
     genre: List[str] = Field(alias="genre_name")
     title: str
-    description: str
+    description: Optional[str] = ""
     director: List[str] = Field(alias="directors")
     actors_names: List[str]
     writers_names: List[str]
