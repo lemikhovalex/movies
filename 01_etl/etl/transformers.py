@@ -47,7 +47,7 @@ class PgToESTransformer(ITransformer):
         out: List[ToES] = []
         for movie_id in movies_ids:
             movie_df = df.query(
-                "film_work_id == '{fwid}'".format(fwid=movie_id)
+                "film_work_id == '{fwid}'".format(fwid=movie_id),
             )
             writers = filter_persons(movie_df, "writer")
             actors = filter_persons(movie_df, "actor")
@@ -58,7 +58,7 @@ class PgToESTransformer(ITransformer):
                     movie_df["imdb_rating"].values[0],
                 ),
                 "genre_name": movie_df["genre_name"].unique().tolist(),
-                "title": movie_df["title"].values[0],
+                "title": post_process_nan(movie_df["title"].values[0]),
                 "description": post_process_nan(
                     movie_df["description"].values[0],
                 ),
