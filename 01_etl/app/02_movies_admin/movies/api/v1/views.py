@@ -84,6 +84,12 @@ class MoviesListApi(MoviesApiMixin, BaseListView):
 
 class MoviesDetailApi(MoviesApiMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
-        return super(MoviesDetailApi, self).get_context_data(**kwargs)[
-            "object"
-        ]
+        f_id = self.kwargs.get("pk")
+        qs = self.get_queryset()
+        qs = qs.filter(id=f_id)
+        try:
+            out = qs[0]
+        except IndexError:
+            out = {}
+
+        return out

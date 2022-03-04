@@ -21,7 +21,7 @@ BATCH_SIZE = 256
 if __name__ == "__main__":
 
     with sqlite3.connect("db.sqlite") as sqlite_conn, psycopg2.connect(
-        **get_dsl("../.env"),
+        **get_dsl("../../.env"),
         cursor_factory=DictCursor,
     ) as pg_conn:
 
