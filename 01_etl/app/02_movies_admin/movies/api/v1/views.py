@@ -1,7 +1,4 @@
-import math
-
 from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.generic.detail import BaseDetailView
@@ -21,7 +18,7 @@ FILMWORK_FIELDS_OF_INTEREST = [
 def get_person_names_aggregation(role: str):
     return ArrayAgg(
         "persons__full_name",
-        filter=Q(persons__personfilmwork__role=role),
+        filter=Q(personfilmwork__role=role),
         distinct=True,
     )
 
@@ -84,12 +81,6 @@ class MoviesListApi(MoviesApiMixin, BaseListView):
 
 class MoviesDetailApi(MoviesApiMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
-        f_id = self.kwargs.get("pk")
-        qs = self.get_queryset()
-        qs = qs.filter(id=f_id)
-        try:
-            out = qs[0]
-        except IndexError:
-            out = {}
-
-        return out
+        return super(MoviesDetailApi, self).get_context_data(**kwargs)[
+            "object"
+        ]
