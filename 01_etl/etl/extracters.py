@@ -14,7 +14,7 @@ from .utils import process_exception
 logger = logging.getLogger("extracter.log")
 
 FMT = "%Y%m%d%H%M%S"  # ex. 20110104172008 -> Jan. 04, 2011 5:20:08pm
-INIT_DATE = datetime.datetime(2010, 2, 8, 1, 40, 27, 425337)
+INIT_DATE = datetime.datetime(1700, 2, 8, 1, 40, 27, 425337)
 
 
 def date_time_to_str(date_t: datetime.datetime) -> str:
@@ -97,7 +97,7 @@ def enrich(
         query = """
             SELECT fw.id, fw.modified
             FROM content.film_work fw
-            LEFT JOIN content.{m2m_tbl} m2m_tbl ON m2m_tbl.film_work_id = fw.id
+            LEFT OUTER JOIN content.{m2m_tbl} m2m_tbl ON m2m_tbl.film_work_id = fw.id
             WHERE m2m_tbl.{fld} IN %s
             ORDER BY fw.modified;
         """.format(
@@ -207,10 +207,14 @@ class GenreExtracter(IPEMExtracter):
     def merge(self, ids: list) -> List[MergedFromPg]:
         if len(ids) == 0:
             return []
-        return merge_data_on_fw_ids(
+        out = merge_data_on_fw_ids(
             pg_connection=self._connect,
             fw_ids=ids,
         )
+        for datum in out:
+            if datum.film_work_id == "68dfb5e2-7014-4738-a2da-c65bd41f5af5":
+                print(datum)
+        return out
 
     def save_state(self):
         for key, val in self.state_to_upd.items():

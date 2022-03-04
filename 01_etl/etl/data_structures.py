@@ -25,13 +25,13 @@ class MergedFromPg(WithQuery):
             p.full_name,
             g.name
         FROM content.film_work fw
-        LEFT JOIN content.person_film_work pfw
+        LEFT OUTER JOIN content.person_film_work pfw
             ON pfw.film_work_id = fw.id
-        LEFT JOIN content.person p
+        LEFT OUTER JOIN content.person p
             ON p.id = pfw.person_id
-        LEFT JOIN content.genre_film_work gfw
+        LEFT OUTER JOIN content.genre_film_work gfw
             ON gfw.film_work_id = fw.id
-        LEFT JOIN content.genre g
+        LEFT OUTER JOIN content.genre g
             ON g.id = gfw.genre_id
         WHERE fw.id IN %s;
         """
