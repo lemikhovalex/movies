@@ -49,9 +49,9 @@ class PgToESTransformer(ITransformer):
             movie_df = df.query(
                 "film_work_id == '{fwid}'".format(fwid=movie_id)
             )
-            writers = filter_persons(df, "writer")
-            actors = filter_persons(df, "actor")
-            directors = filter_persons(df, "director")
+            writers = filter_persons(movie_df, "writer")
+            actors = filter_persons(movie_df, "actor")
+            directors = filter_persons(movie_df, "director")
             movie_data = {
                 "film_work_id": movie_id,
                 "imdb_rating": post_process_nan(
