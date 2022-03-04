@@ -15,14 +15,27 @@ def main():
     transformer = PgToESTransformer()
     loader = Loader(index="movies")
     with psycopg2.connect(
-        **get_dsl(".env"), cursor_factory=DictCursor
+        **get_dsl(".env"),
+        cursor_factory=DictCursor,
     ) as pg_conn:
         # vary extractor for genre, fw, person
         for _i, extracter in enumerate(
             (
-                PersonExtracter(pg_connection=pg_conn, batch_size=50),
-                GenreExtracter(pg_connection=pg_conn, batch_size=1),
-                FilmworkExtracter(pg_connection=pg_conn, batch_size=10),
+                PersonExtracter(
+                    pg_connection=pg_conn,
+                    state_path="states/person_state.json",
+                    batch_size=50,
+                ),
+                GenreExtracter(
+                    pg_connection=pg_conn,
+                    state_path="states/genre_state.json",
+                    batch_size=2,
+                ),
+                FilmworkExtracter(
+                    pg_connection=pg_conn,
+                    state_path="states/fw_state.json",
+                    batch_size=10,
+                ),
             ),
         ):
             # combine etl

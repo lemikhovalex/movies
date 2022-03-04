@@ -154,13 +154,13 @@ class IPEMExtracter(IExtracter, ABC):
 class GenreExtracter(IPEMExtracter):
     table = "genre"
 
-    def __init__(self, pg_connection, batch_size: int = 1):
+    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
         super(GenreExtracter, self).__init__()
         self._connect = pg_connection
         self._last_modified = ""
         self.batch_size = batch_size
         storage = JsonFileStorage(
-            "{tbl}_loader_state.json".format(tbl=self.table),
+            state_path,
         )
         self.state = State(storage)
         if self.state.get_state("prod_offset") is None:
@@ -211,9 +211,6 @@ class GenreExtracter(IPEMExtracter):
             pg_connection=self._connect,
             fw_ids=ids,
         )
-        for datum in out:
-            if datum.film_work_id == "68dfb5e2-7014-4738-a2da-c65bd41f5af5":
-                print(datum)
         return out
 
     def save_state(self):
@@ -225,8 +222,10 @@ class GenreExtracter(IPEMExtracter):
 class FilmworkExtracter(GenreExtracter):
     table = "film_work"
 
-    def __init__(self, pg_connection, batch_size: int = 1):
-        super(FilmworkExtracter, self).__init__(pg_connection, batch_size)
+    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
+        super(FilmworkExtracter, self).__init__(
+            pg_connection, state_path, batch_size
+        )
 
     def enrich(self, ids: list) -> list:
         return ids
@@ -235,5 +234,7 @@ class FilmworkExtracter(GenreExtracter):
 class PersonExtracter(GenreExtracter):
     table = "person"
 
-    def __init__(self, pg_connection, batch_size: int = 1):
-        super(PersonExtracter, self).__init__(pg_connection, batch_size)
+    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
+        super(PersonExtracter, self).__init__(
+            pg_connection, state_path, batch_size
+        )
