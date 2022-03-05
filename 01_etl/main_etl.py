@@ -22,7 +22,7 @@ def main():
     loader = Loader(
         index="movies",
         es_url="http://127.0.0.1:{es_port}".format(
-            es_port=os.environ.get("ES_PORT")
+            es_port=os.environ.get("ES_PORT"),
         ),
     )
     with psycopg2.connect(
@@ -30,23 +30,21 @@ def main():
         cursor_factory=DictCursor,
     ) as pg_conn:
         # vary extractor for genre, fw, person
-        for _i, extracter in enumerate(
-            (
-                PersonExtracter(
-                    pg_connection=pg_conn,
-                    state_path="states/person_state.json",
-                    batch_size=50,
-                ),
-                GenreExtracter(
-                    pg_connection=pg_conn,
-                    state_path="states/genre_state.json",
-                    batch_size=2,
-                ),
-                FilmworkExtracter(
-                    pg_connection=pg_conn,
-                    state_path="states/fw_state.json",
-                    batch_size=10,
-                ),
+        for extracter in (
+            PersonExtracter(
+                pg_connection=pg_conn,
+                state_path="states/person_state.json",
+                batch_size=50,
+            ),
+            GenreExtracter(
+                pg_connection=pg_conn,
+                state_path="states/genre_state.json",
+                batch_size=2,
+            ),
+            FilmworkExtracter(
+                pg_connection=pg_conn,
+                state_path="states/fw_state.json",
+                batch_size=10,
             ),
         ):
             # combine etl
