@@ -12,12 +12,13 @@ logger = logging.getLogger("loader.log")
 
 
 class Loader(ILoader):
-    def __init__(self, index: str):
+    def __init__(self, index: str, es_url: str):
         self.index = index
+        self.es_url = es_url
         pass
 
     def load(self, data_to_load: List[ToES]):
-        el_s_client = Elasticsearch("http://127.0.0.1:9200")
+        el_s_client = Elasticsearch(self.es_url)
         actions = []
         for datum in data_to_load:
             to_app = json.loads(datum.json())
