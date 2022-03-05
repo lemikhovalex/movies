@@ -8,7 +8,9 @@ from .data_structures import ToES
 from .etl_interfaces import ILoader
 from .utils import process_exception
 
-logger = logging.getLogger("loader.log")
+LOGGER_NAME = "loader.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
 class Loader(ILoader):

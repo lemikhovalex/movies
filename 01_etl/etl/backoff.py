@@ -4,7 +4,9 @@ from functools import wraps
 
 from .utils import process_exception
 
-logger = logging.getLogger("backoff.log")
+LOGGER_NAME = "backoff.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
 def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):

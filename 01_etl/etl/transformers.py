@@ -7,7 +7,9 @@ from .data_structures import ESPerson, MergedFromPg, ToES
 from .etl_interfaces import ITransformer
 from .utils import process_exception
 
-logger = logging.getLogger("transformer.log")
+LOGGER_NAME = "transformer.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
 def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:

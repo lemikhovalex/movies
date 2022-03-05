@@ -11,10 +11,13 @@ from .etl_interfaces import IExtracter
 from .state import JsonFileStorage, State
 from .utils import process_exception
 
-logger = logging.getLogger("extracter.log")
+LOGGER_NAME = "extracter.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 FMT = "%Y%m%d%H%M%S"  # ex. 20110104172008 -> Jan. 04, 2011 5:20:08pm
-INIT_DATE = datetime.datetime.min
+# after all writing datetime.datetime.min to str and back is challanging
+INIT_DATE = datetime.datetime(1700, 2, 8, 1, 40, 27, 425337)
 
 
 def date_time_to_str(date_t: datetime.datetime) -> str:
