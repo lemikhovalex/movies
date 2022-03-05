@@ -14,7 +14,7 @@ from .utils import process_exception
 logger = logging.getLogger("extracter.log")
 
 FMT = "%Y%m%d%H%M%S"  # ex. 20110104172008 -> Jan. 04, 2011 5:20:08pm
-INIT_DATE = datetime.datetime(1700, 2, 8, 1, 40, 27, 425337)
+INIT_DATE = datetime.datetime.min
 
 
 def date_time_to_str(date_t: datetime.datetime) -> str:
