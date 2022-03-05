@@ -1,5 +1,10 @@
+import logging
 import time
 from functools import wraps
+
+from .utils import process_exception
+
+logger = logging.getLogger("backoff.log")
 
 
 def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
@@ -27,10 +32,11 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
                 try:
                     out = func(*args, **kwargs)
                     done = True
-                except Exception:
+                except Exception as ex:
                     time.sleep(delay)
                     delay *= factor
                     delay = min(delay, border_sleep_time)
+                    process_exception(ex, logger, do_raise=False)
             return out
 
         return inner
