@@ -1,0 +1,2 @@
+FROM postgres:14.0-alpine
+COPY ./app/01_schema_design/movies_database.ddl /docker-entrypoint-initdb.d/ddl.sql
