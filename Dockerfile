@@ -7,13 +7,17 @@ COPY requirements.txt /
 EXPOSE 80/tcp
 RUN pip3 install -r requirements.txt --no-cache-dir
 
+
 COPY ./app app 
 COPY ./.env ./.env 
-RUN chmod +x /wait
-RUN /wait
-
 WORKDIR /app/
-RUN python3 manage.py collectstatic --noinput
-RUN python3 manage.py migrate
+
+RUN chmod +x /wait
+
+RUN /wait \
+    && python3 manage.py collectstatic --noinput \
+    && python3 manage.py makemigrations \
+    && python3 manage.py migrate
+
 ENTRYPOINT ["gunicorn"]
 CMD ["config.wsgi:application", "--bind", "backend:80", "--workers", "1", "--reload"]
