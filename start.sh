@@ -5,7 +5,11 @@
 /wait \
     && python3 manage.py collectstatic --noinput \
     && python3 manage.py migrate \
-    && gunicorn config.wsgi:application --bind backend:80 --workers 1 --reload
+
+python3 manage.py createsuperuser --noinput || echo "SU creation failed"
+
+gunicorn config.wsgi:application --bind backend:80 --workers 1 --reload
+
 
 # Wait for any process to exit
 wait -n
