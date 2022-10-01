@@ -99,12 +99,13 @@ class Filmwork(TimeStampedMixin, UUIDMixin):
     certificate = models.TextField(_("certificate"), blank=True, null=True)
     file_path = models.TextField(_("file_path"), blank=True, null=True)
     title = models.TextField(_("title"), blank=True)
-    description = models.TextField(_("description"), blank=True)
-    creation_date = models.DateTimeField(_("creation_date"))
+    description = models.TextField(_("description"), blank=True, null=True)
+    creation_date = models.DateTimeField(_("creation_date"), null=True)
     rating = models.FloatField(
         _("rating"),
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
+        null=True,
     )
     type = models.TextField(_("type"), choices=TypesOfFilmwork.choices)
     genres = models.ManyToManyField(Genre, through="GenreFilmwork")
