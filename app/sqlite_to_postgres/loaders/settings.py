@@ -9,7 +9,7 @@ def get_dsl(path_to_dotenv: str):
         "dbname": os.environ.get("DB_NAME"),
         "user": os.environ.get("DB_USER"),
         "password": os.environ.get("DB_PASSWORD"),
-        "host": "127.0.0.1",
-        "port": 5432,
+        "host": os.environ.get("DB_HOST"),
+        "port": os.environ.get("DB_PORT"),
     }
     return dsl
