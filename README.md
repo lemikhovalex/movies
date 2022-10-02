@@ -12,7 +12,8 @@ The project includes:
 Prefered way with docker compose
 Start wth moving example `.env.sample` to `.env`.
 
-Then run 
+Visit repo with common services to raise all the stack [with this link](https://github.com/lemikhovalex/movies_common_services)
+and follow instructions
 
 `docker-compose up -d --build`
 
