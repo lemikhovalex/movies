@@ -3,8 +3,8 @@ import os
 from dotenv import load_dotenv
 
 
-def get_dsl(path_to_dotenv: str):
-    load_dotenv(path_to_dotenv)
+def get_dsl():
+    load_dotenv('.env')
     dsl = {
         "dbname": os.environ.get("DB_NAME"),
         "user": os.environ.get("DB_USER"),

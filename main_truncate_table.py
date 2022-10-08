@@ -1,12 +1,12 @@
 import psycopg2
 from psycopg2.extras import DictCursor
 
-from loaders import get_dsl
+from sqlite_to_postgres.loaders import get_dsl
 
 if __name__ == "__main__":
 
     with psycopg2.connect(
-        **get_dsl("../../.env"),
+        **get_dsl(),
         cursor_factory=DictCursor,
     ) as pg_conn:
         with pg_conn.cursor() as cursor:

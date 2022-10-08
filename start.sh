@@ -3,10 +3,10 @@
 # Start the first process
 
 /wait \
-    && python3 manage.py collectstatic --noinput \
-    && python3 manage.py migrate \
+    && python manage.py collectstatic --noinput \
+    && python manage.py migrate \
 
-python3 manage.py createsuperuser --noinput || echo "SU creation failed"
+python manage.py createsuperuser --noinput || echo "SU creation failed"
 
 gunicorn config.wsgi:application --bind admin:8000 --workers 1 --reload
 
