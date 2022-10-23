@@ -4,7 +4,7 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2.extras import DictCursor
 
-from app.sqlite_to_postgres.loaders.settings import get_dsl
+from sqlite_to_postgres.loaders.settings import get_dsl
 from etl.backoff import backoff
 from etl.extracters import FilmworkExtracter, GenreExtracter, PersonExtracter
 from etl.loaders import Loader
@@ -21,12 +21,13 @@ def main():
     transformer = PgToESTransformer()
     loader = Loader(
         index="movies",
-        es_url="http://127.0.0.1:{es_port}".format(
+        es_url="http://{es_host}:{es_port}".format(
             es_port=os.environ.get("ES_PORT"),
+            es_host=os.environ.get("ES_HOST")
         ),
     )
     with psycopg2.connect(
-        **get_dsl(PATH_TO_ENV),
+        **get_dsl(),
         cursor_factory=DictCursor,
     ) as pg_conn:
         # vary extractor for genre, fw, person
@@ -50,8 +51,8 @@ def main():
             # combine etl
             etl = MoviesETL(
                 extracter=extracter,
-                loader=loader,
                 transformer=transformer,
+                loader=loader,
             )
             # and run it
             etl.run()
