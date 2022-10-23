@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from .data_structures import ESPerson, MergedFromPg, ToES
+from .data_structures import ESPerson, MergedFromPg, ToES, ESGenre
 from .etl_interfaces import ITransformer
 from .utils import process_exception
 
@@ -33,6 +33,23 @@ def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
     return out
 
 
+def get_genres(df: pd.DataFrame) -> List[ESGenre]:
+    genres = df[["genre_name", "genre_id"]]
+    list_of_genres = (
+        genres
+        .drop_duplicates()
+        .to_dict("records")
+    )
+    try:
+        out = [
+            ESGenre(id=g["genre_id"], name=g["genre_name"])
+            for g in list_of_genres
+        ]
+    except Exception as excep:
+        process_exception(excep, logger)
+    return out 
+
+
 def post_process_nan(v):
     if pd.isna(v):
         return None
@@ -54,21 +71,24 @@ class PgToESTransformer(ITransformer):
             writers = filter_persons(movie_df, "writer")
             actors = filter_persons(movie_df, "actor")
             directors = filter_persons(movie_df, "director")
+            genres = get_genres(movie_df)
             movie_data = {
                 "film_work_id": movie_id,
                 "imdb_rating": post_process_nan(
                     movie_df["imdb_rating"].values[0],
                 ),
-                "genre_name": movie_df["genre_name"].unique().tolist(),
                 "title": post_process_nan(movie_df["title"].values[0]),
                 "description": post_process_nan(
                     movie_df["description"].values[0],
                 ),
-                "actors": actors,
-                "writers": writers,
-                "directors": [direct.name for direct in directors],
+                "genres_names": [g.name for g in genres],
+                "directors_names": [direct.name for direct in directors],
                 "actors_names": [act.name for act in actors],
                 "writers_names": [writ.name for writ in writers],
+                "actors": actors,
+                "writers": writers,
+                "directors": directors,
+                "genres": genres,
             }
             # if pydantic cant validate let's log it
             try:

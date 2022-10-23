@@ -23,6 +23,7 @@ class MergedFromPg(WithQuery):
             pfw.role,
             p.id,
             p.full_name,
+            g.id,
             g.name
         FROM content.film_work fw
         LEFT OUTER JOIN content.person_film_work pfw
@@ -45,6 +46,7 @@ class MergedFromPg(WithQuery):
     role: str
     person_id: str
     person_full_name: str
+    genre_id: str
     genre_name: str
 
 
@@ -54,14 +56,24 @@ class ESPerson:
     name: str
 
 
+@dataclass
+class ESGenre:
+    id: str
+    name: str
+
+
 class ToES(BaseModel):
     id: str = Field(alias="film_work_id")
     imdb_rating: Optional[float]
-    genre: List[str] = Field(alias="genre_name")
+    genres: List[ESGenre]
+    genres_names: List[str]
     title: str
     description: Optional[str]
-    director: List[str] = Field(alias="directors")
-    actors_names: List[str]
+    directors: List[ESPerson]
+    directors_names: List[str]
+
     writers_names: List[str]
-    actors: List[ESPerson]
     writers: List[ESPerson]
+
+    actors: List[ESPerson]
+    actors_names: List[str]
