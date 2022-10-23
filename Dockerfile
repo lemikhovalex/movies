@@ -1,13 +1,15 @@
-FROM python:3.10-alpine
-
-RUN addgroup -S app && adduser -S app app
+FROM python:3.10.7-slim-buster 
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk add -U --no-cache build-base && \
-    apk add --no-cache bash && \
-    apk del build-base
+RUN apt-get update && apt-get install --no-install-recommends -y \
+  # dependencies for building Python packages
+  build-essential \
+  # psycopg2 dependencies
+  libpq-dev \
+  python3-dev \
+  pkg-config
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 
