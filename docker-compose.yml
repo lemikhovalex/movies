@@ -13,9 +13,7 @@ services:
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
-    depends_on:
-      - admin_db
-      - nginx
+      WAIT_HOSTS: ${ES_HOST}:${ES_PORT}, ${DB_HOST}:${DB_PORT}
     networks:
       - admin
 
