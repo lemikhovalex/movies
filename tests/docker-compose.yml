@@ -1,5 +1,20 @@
 version: '3.9'
 services:
+  admin_db:
+    build:
+      context: ./../admin_db
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: "/var/lib/postgresql/data"
+    volumes:
+      - admin_db_vol:/var/lib/postgresql/data
+    command: -p ${DB_PORT}
+
   admin:
     container_name: admin
     build: ../
@@ -15,15 +30,10 @@ services:
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
-      WAIT_HOSTS: ${ES_HOST}:${ES_PORT}, ${DB_HOST}:${DB_PORT}
-    networks:
-      - admin
+      WAIT_HOSTS: ${DB_HOST}:${DB_PORT}
+    depends_on:
+      - admin_db
 
 volumes:
+  admin_db_vol:
   admin_static:
-    external:
-      name: movies_admin_static
-
-networks:
-  admin:
-    name: movies_admin_network
