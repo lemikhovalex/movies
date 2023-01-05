@@ -25,6 +25,7 @@ WORKDIR /app/
 
 RUN chmod +x /wait
 RUN chmod +x /start.sh
+RUN chmod +x test.sh
 
 VOLUME /app
 
