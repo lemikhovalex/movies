@@ -1,10 +1,8 @@
 import sqlite3
 from typing import List, Type
 
-import psycopg2
-
-from sqlite_to_postgres.loaders.loaders import PostgresSaver, SQLiteDownLoader
-from sqlite_to_postgres.loaders.tables import (
+from sqlite_to_postgres.loaders import PostgresSaver, SQLiteDownLoader
+from sqlite_to_postgres.tables import (
     Filmwork,
     Genre,
     GenreFilmwork,
