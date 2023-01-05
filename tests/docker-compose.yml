@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  admin:
+    container_name: admin
+    build: ../
+    volumes:
+      - admin_static:/app/static
+      - ./..:/app
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
+      WAIT_HOSTS: ${ES_HOST}:${ES_PORT}, ${DB_HOST}:${DB_PORT}
+    networks:
+      - admin
+
+volumes:
+  admin_static:
+    external:
+      name: movies_admin_static
+
+networks:
+  admin:
+    name: movies_admin_network
