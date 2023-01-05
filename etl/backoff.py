@@ -9,7 +9,7 @@ logger = logging.getLogger(LOGGER_NAME)
 logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
-def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
+def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10, max_retries: int = 10):
     """
     Функция для повторного выполнения функции через некоторое время,
     если возникла ошибка. Использует наивный экспоненциальный рост времени
@@ -30,11 +30,15 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
             done = False
             delay = start_sleep_time
             out = None
-            while not done:
+            n_tries = 0
+            while (not done) and (n_tries < max_retries):
                 try:
                     out = func(*args, **kwargs)
                     done = True
                 except Exception as ex:
+                    n_tries += 1
+                    if n_tries== max_retries:
+                        raise ex
                     time.sleep(delay)
                     delay *= factor
                     delay = min(delay, border_sleep_time)
