@@ -1,8 +1,8 @@
 import sqlite3
 from typing import List, Type
 
-from sqlite_to_postgres.loaders import PostgresSaver, SQLiteDownLoader
-from sqlite_to_postgres.tables import (
+from etl.sqlite_to_postgres.loaders import PostgresSaver, SQLiteDownLoader
+from etl.sqlite_to_postgres.tables import (
     Filmwork,
     Genre,
     GenreFilmwork,
