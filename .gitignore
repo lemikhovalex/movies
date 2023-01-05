@@ -1,33 +1,4 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@lemikhovalex 
-lemikhovalex
-/
-middle_python_intro
-Private
-generated from yandex-praktikum/middle_python_intro
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-middle_python_intro/.gitignore
-@lemikhovalex
-lemikhovalex Initial commit
-Latest commit 018a723 6 days ago
- History
- 1 contributor
-131 lines (106 sloc)  1.77 KB
-  
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -139,6 +110,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+docker-compose.override.yaml
 
 # Spyder project settings
 .spyderproject
