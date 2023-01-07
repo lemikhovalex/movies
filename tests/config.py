@@ -1,0 +1,15 @@
+from pydantic import BaseSettings
+
+
+class Config(BaseSettings):
+    es_host: str
+    es_port: int
+
+    db_host: str
+    db_port: int
+    db_user: str
+    db_name: str
+    db_password: str
+
+
+CONFIG = Config()
