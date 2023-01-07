@@ -3,9 +3,10 @@ from typing import List
 
 import pandas as pd
 
-from .data_structures import ESPerson, MergedFromPg, ToES, ESGenre
-from .etl_interfaces import ITransformer
-from .utils import process_exception
+from etl.utils import process_exception
+
+from etl.pg_to_es.data_structures import ESGenre, ESPerson, MergedFromPg, ToES
+from etl.pg_to_es.etl_interfaces import ITransformer
 
 LOGGER_NAME = "transformer.log"
 logger = logging.getLogger(LOGGER_NAME)
@@ -25,8 +26,7 @@ def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
     # if we cant process data we
     try:
         out = [
-            ESPerson(id=p["person_id"], name=p["person_full_name"])
-            for p in list_of_p
+            ESPerson(id=p["person_id"], name=p["person_full_name"]) for p in list_of_p
         ]
     except Exception as excep:
         process_exception(excep, logger)
@@ -35,19 +35,12 @@ def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:
 
 def get_genres(df: pd.DataFrame) -> List[ESGenre]:
     genres = df[["genre_name", "genre_id"]]
-    list_of_genres = (
-        genres
-        .drop_duplicates()
-        .to_dict("records")
-    )
+    list_of_genres = genres.drop_duplicates().to_dict("records")
     try:
-        out = [
-            ESGenre(id=g["genre_id"], name=g["genre_name"])
-            for g in list_of_genres
-        ]
+        out = [ESGenre(id=g["genre_id"], name=g["genre_name"]) for g in list_of_genres]
     except Exception as excep:
         process_exception(excep, logger)
-    return out 
+    return out
 
 
 def post_process_nan(v):

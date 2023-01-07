@@ -5,11 +5,11 @@ from typing import Generator, List, Optional, Tuple
 
 from psycopg2.errors import SyntaxError
 
-from .backoff import backoff
-from .data_structures import MergedFromPg
-from .etl_interfaces import IExtracter
-from .state import JsonFileStorage, State
-from .utils import process_exception
+from etl.backoff import backoff
+from etl.pg_to_es.data_structures import MergedFromPg
+from etl.pg_to_es.etl_interfaces import IExtracter
+from etl.state import JsonFileStorage, State
+from etl.utils import process_exception
 
 LOGGER_NAME = "extracter.log"
 logger = logging.getLogger(LOGGER_NAME)

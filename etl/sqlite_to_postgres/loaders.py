@@ -4,7 +4,7 @@ from typing import Generator, List, Type
 
 from psycopg2.extras import execute_values
 
-from .tables import SelectableFromSQLite
+from etl.sqlite_to_postgres.tables import SelectableFromSQLite
 
 logging.basicConfig(
     filename=".log",

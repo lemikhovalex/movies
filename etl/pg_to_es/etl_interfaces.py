@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar, Generator
 
-from .state import State
+from etl.state import State
 
 
 class WithQuery(ABC):
