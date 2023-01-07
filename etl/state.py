@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 
-class BaseStorage:
+class BaseStateStorage:
     @abc.abstractmethod
     def save_state(self, state: dict) -> None:
         """Сохранить состояние в постоянное хранилище"""
@@ -15,7 +15,7 @@ class BaseStorage:
         pass
 
 
-class JsonFileStorage(BaseStorage):
+class JsonFileStorage(BaseStateStorage):
     def __init__(self, file_path: str):
         self.file_path = file_path
 
@@ -42,7 +42,7 @@ class State:
     БД или распределённым хранилищем.
     """
 
-    def __init__(self, storage: BaseStorage):
+    def __init__(self, storage: BaseStateStorage):
         self.storage = storage
 
     def set_state(self, key: str, value: Any) -> None:
