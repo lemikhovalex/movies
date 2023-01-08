@@ -1,13 +1,13 @@
 import sqlite3
-from typing import Generator
+from typing import Callable, Generator
 
 import psycopg2
 import pytest
 from elasticsearch import Elasticsearch
 from psycopg2.extras import DictCursor
 
-from tests.config import CONFIG
 from tests import constants
+from tests.config import CONFIG
 
 
 @pytest.fixture(scope="session")
@@ -43,7 +43,7 @@ def pg_conn():
 
 
 @pytest.fixture(scope="session")
-def es_factory():
+def es_factory() -> Generator[Callable[[], Elasticsearch], None, None]:
     url = f"http://{CONFIG.es_host}:{CONFIG.es_port}"
     es = Elasticsearch(url)
     indecies = ["genres", "persons", "movies"]
@@ -66,3 +66,8 @@ def es_factory():
         es.indices.delete(index=idx)
 
     es.close()
+
+
+@pytest.fixture(scope="session")
+def es_conn(es_factory: Callable[[], Elasticsearch]):
+    return es_factory()
