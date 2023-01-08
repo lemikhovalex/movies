@@ -1,7 +1,7 @@
 import datetime
 import logging
 from abc import ABC, abstractmethod
-from typing import Generator, List, Optional, Tuple
+from typing import Any, Generator, Iterable, List, Optional
 
 from psycopg2.errors import SyntaxError
 
@@ -130,7 +130,7 @@ class IPEMExtracter(IExtracter, ABC):
         self.state_to_upd = {}
 
     @abstractmethod
-    def produce(self) -> Tuple[list, bool]:
+    def produce(self) -> Iterable[Any]:
         pass
 
     @abstractmethod
@@ -142,11 +142,8 @@ class IPEMExtracter(IExtracter, ABC):
         pass
 
     def extract(self) -> Generator[list, None, None]:
-        is_all_produced = False
-        while not is_all_produced:
-            proxy_ids, is_all_produced = self.produce()
+        for proxy_ids in self.produce():
             target_ids = self.enrich(proxy_ids)
-
             yield self.merge(target_ids)
 
     @abstractmethod
@@ -173,26 +170,27 @@ class GenreExtracter(IPEMExtracter):
                 date_time_to_str(INIT_DATE),
             )
 
-    def produce(self) -> Tuple[list, bool]:
-        out = fetch_upd_ids_from_table(
-            pg_connection=self._connect,
-            table=self.table,
-            batch_size=self.batch_size,
-            state=self.state,
-        )
+    def produce(self) -> Iterable[List[Any]]:
         is_done = False
-        if len(out) < self.batch_size:
-            is_done = True
-            new_offset = 0
-            self.state_to_upd["last_load"] = date_time_to_str(
-                datetime.datetime.now(),
+        while not is_done:
+            out = fetch_upd_ids_from_table(
+                pg_connection=self._connect,
+                table=self.table,
+                batch_size=self.batch_size,
+                state=self.state,
             )
-        # completed fine, have some more, now upd offset
-        else:
-            offset_before = int(self.state.get_state("prod_offset"))
-            new_offset = offset_before + self.batch_size
-        self.state_to_upd["prod_offset"] = new_offset
-        return out, is_done
+            if len(out) < self.batch_size:
+                is_done = True
+                new_offset = 0
+                self.state_to_upd["last_load"] = date_time_to_str(
+                    datetime.datetime.now(),
+                )
+            # completed fine, have some more, now upd offset
+            else:
+                offset_before = int(self.state.get_state("prod_offset"))
+                new_offset = offset_before + self.batch_size
+            self.state_to_upd["prod_offset"] = new_offset
+            yield out
 
     def enrich(self, ids: list) -> list:
         if len(ids) == 0:
