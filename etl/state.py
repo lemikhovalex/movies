@@ -73,6 +73,10 @@ class BaseUniqueStorage(ABC):
     def pop(self, batch_size: int) -> Iterable[Any]:
         ...
 
+    @abstractmethod
+    def __len__(self) -> int:
+        ...
+
 
 class GenericQueue(BaseUniqueStorage):
     def __init__(self) -> None:
@@ -81,7 +85,9 @@ class GenericQueue(BaseUniqueStorage):
     def update(self, items: Iterable[Any]) -> None:
         self._storage.update(items)
 
-    @abstractmethod
     def pop(self, batch_size: int) -> Iterable[Any]:
         for _ in range(batch_size):
             yield self._storage.pop()
+
+    def __len__(self) -> int:
+        return len(self._storage)

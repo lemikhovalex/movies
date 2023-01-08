@@ -8,7 +8,7 @@ from psycopg2.errors import SyntaxError
 from etl.backoff import backoff
 from etl.pg_to_es.base import IExtracter
 from etl.pg_to_es.data_structures import MergedFromPg
-from etl.state import State
+from etl.state import BaseUniqueStorage, State
 from etl.utils import process_exception
 
 LOGGER_NAME = "extracter.log"
@@ -123,27 +123,37 @@ def enrich(
         return fetched_ids
 
 
-class IPEMExtracter(IExtracter, ABC):
+class BaseIdsExtracter(IExtracter, ABC):
+    @abstractmethod
+    def produce_base(self) -> Iterable[Any]:
+        pass
+
+    @abstractmethod
+    def enrich_to_target(self, ids: list) -> list:
+        pass
+
+    def extract(self) -> Iterable[List[Any]]:
+        for proxy_ids in self.produce_base():
+            yield self.enrich_to_target(proxy_ids)
+
+    @abstractmethod
+    def save_state(self):
+        pass
+
+
+class IPEMExtracter(BaseIdsExtracter, ABC):
     state: State
 
     def __init__(self):
         self.state_to_upd = {}
 
     @abstractmethod
-    def produce(self) -> Iterable[Any]:
-        pass
-
-    @abstractmethod
-    def enrich(self, ids: list) -> list:
-        pass
-
-    @abstractmethod
     def merge(self, ids: list) -> list:
         pass
 
-    def extract(self) -> Generator[list, None, None]:
-        for proxy_ids in self.produce():
-            target_ids = self.enrich(proxy_ids)
+    def extract(self) -> Iterable[List[Any]]:
+        targed_ids_ = super().extract()
+        for target_ids in targed_ids_:
             yield self.merge(target_ids)
 
     @abstractmethod
@@ -170,7 +180,7 @@ class GenreExtracter(IPEMExtracter):
                 date_time_to_str(INIT_DATE),
             )
 
-    def produce(self) -> Iterable[List[Any]]:
+    def produce_base(self) -> Iterable[List[Any]]:
         is_done = False
         while not is_done:
             out = fetch_upd_ids_from_table(
@@ -192,7 +202,7 @@ class GenreExtracter(IPEMExtracter):
             self.state_to_upd["prod_offset"] = new_offset
             yield out
 
-    def enrich(self, ids: list) -> list:
+    def enrich_to_target(self, ids: list) -> list:
         if len(ids) == 0:
             return []
         return enrich(
@@ -224,7 +234,7 @@ class FilmworkExtracter(GenreExtracter):
     def __init__(self, pg_connection, state: State, batch_size: int = 1):
         super(FilmworkExtracter, self).__init__(pg_connection, state, batch_size)
 
-    def enrich(self, ids: list) -> list:
+    def enrich_to_target(self, ids: list) -> list:
         return ids
 
 
@@ -233,3 +243,16 @@ class PersonExtracter(GenreExtracter):
 
     def __init__(self, pg_connection, state: State, batch_size: int = 1):
         super(PersonExtracter, self).__init__(pg_connection, state, batch_size)
+
+
+class TargetExtracer(IExtracter):
+    def __init__(self, u_storage: BaseUniqueStorage, batch_size: int) -> None:
+        self.u_storage = u_storage
+        self.batch_size = batch_size
+
+    def extract(self) -> Iterable[List[Any]]:
+        while len(self.u_storage) > 0:
+            yield list(self.u_storage.pop(self.batch_size))
+
+    def save_state(self):
+        ...
