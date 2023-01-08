@@ -3,10 +3,9 @@ from typing import List
 
 import pandas as pd
 
-from etl.utils import process_exception
-
+from etl.pg_to_es.base import ITransformer
 from etl.pg_to_es.data_structures import ESGenre, ESPerson, MergedFromPg, ToES
-from etl.pg_to_es.etl_interfaces import ITransformer
+from etl.utils import process_exception
 
 LOGGER_NAME = "transformer.log"
 logger = logging.getLogger(LOGGER_NAME)

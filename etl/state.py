@@ -1,6 +1,8 @@
 import abc
 import json
-from typing import Any
+import random
+from abc import ABC, abstractmethod
+from typing import Any, Iterable
 
 
 class BaseStateStorage:
@@ -60,3 +62,26 @@ class State:
         except KeyError:
             pass
         return out
+
+
+class BaseUniqueStorage(ABC):
+    @abstractmethod
+    def update(self, items: Iterable[Any]) -> None:
+        ...
+
+    @abstractmethod
+    def pop(self, batch_size: int) -> Iterable[Any]:
+        ...
+
+
+class GenericQueue(BaseUniqueStorage):
+    def __init__(self) -> None:
+        self._storage = set()
+
+    def update(self, items: Iterable[Any]) -> None:
+        self._storage.update(items)
+
+    @abstractmethod
+    def pop(self, batch_size: int) -> Iterable[Any]:
+        for _ in range(batch_size):
+            yield self._storage.pop()

@@ -6,9 +6,9 @@ from typing import Generator, List, Optional, Tuple
 from psycopg2.errors import SyntaxError
 
 from etl.backoff import backoff
+from etl.pg_to_es.base import IExtracter
 from etl.pg_to_es.data_structures import MergedFromPg
-from etl.pg_to_es.etl_interfaces import IExtracter
-from etl.state import JsonFileStorage, State
+from etl.state import State
 from etl.utils import process_exception
 
 LOGGER_NAME = "extracter.log"
@@ -157,15 +157,13 @@ class IPEMExtracter(IExtracter, ABC):
 class GenreExtracter(IPEMExtracter):
     table = "genre"
 
-    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
+    def __init__(self, pg_connection, state: State, batch_size: int = 1):
         super(GenreExtracter, self).__init__()
         self._connect = pg_connection
         self._last_modified = ""
         self.batch_size = batch_size
-        storage = JsonFileStorage(
-            state_path,
-        )
-        self.state = State(storage)
+
+        self.state = state
         if self.state.get_state("prod_offset") is None:
             self.state.set_state("prod_offset", 0)
 
@@ -225,10 +223,8 @@ class GenreExtracter(IPEMExtracter):
 class FilmworkExtracter(GenreExtracter):
     table = "film_work"
 
-    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
-        super(FilmworkExtracter, self).__init__(
-            pg_connection, state_path, batch_size
-        )
+    def __init__(self, pg_connection, state: State, batch_size: int = 1):
+        super(FilmworkExtracter, self).__init__(pg_connection, state, batch_size)
 
     def enrich(self, ids: list) -> list:
         return ids
@@ -237,7 +233,5 @@ class FilmworkExtracter(GenreExtracter):
 class PersonExtracter(GenreExtracter):
     table = "person"
 
-    def __init__(self, pg_connection, state_path: str, batch_size: int = 1):
-        super(PersonExtracter, self).__init__(
-            pg_connection, state_path, batch_size
-        )
+    def __init__(self, pg_connection, state: State, batch_size: int = 1):
+        super(PersonExtracter, self).__init__(pg_connection, state, batch_size)

@@ -1,4 +1,4 @@
-from .etl_interfaces import IETL, IExtracter, ILoader, ITransformer
+from etl.pg_to_es.base import IETL, IExtracter, ILoader, ITransformer
 
 
 class MoviesETL(IETL):

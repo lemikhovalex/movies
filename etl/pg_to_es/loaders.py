@@ -4,10 +4,9 @@ from typing import Callable, List
 
 from elasticsearch import Elasticsearch, helpers
 
+from etl.pg_to_es.base import ILoader
+from etl.pg_to_es.data_structures import ToES
 from etl.utils import process_exception
-
-from .data_structures import ToES
-from .etl_interfaces import ILoader
 
 LOGGER_NAME = "loader.log"
 logger = logging.getLogger(LOGGER_NAME)

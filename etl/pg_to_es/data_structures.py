@@ -4,7 +4,7 @@ from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .etl_interfaces import WithQuery
+from etl.pg_to_es.base import WithQuery
 
 
 @dataclass

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Generator
+from typing import Any, ClassVar, Generator, Iterable
 
 from etl.state import State
 
