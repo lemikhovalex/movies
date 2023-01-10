@@ -1,5 +1,7 @@
 import sqlite3
 
+from elasticsearch import Elasticsearch
+
 from etl import pg_to_es, sqlite_to_postgres
 
 BATCH_SIZE = 256
@@ -100,7 +102,7 @@ def test_table_names(pg_conn, sqlite_conn: sqlite3.Connection):
             assert t_name not in sq_tables
 
 
-def test_etl_process(pg_conn, sqlite_conn: sqlite3.Connection):
+def test_etl_sqlite_to_pg(pg_conn, sqlite_conn: sqlite3.Connection):
     sqlite_to_postgres.main(
         pg_conn=pg_conn, sqlite_conn=sqlite_conn, batch_size=BATCH_SIZE
     )
@@ -124,7 +126,7 @@ def test_number_of_rows(pg_conn, sqlite_conn: sqlite3.Connection):
         sq_lite_curs.close()
 
 
-def testr_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
+def test_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
 
     with pg_conn.cursor() as pg_cursor:
         sq_lite_curs = sqlite_conn.cursor()
@@ -149,5 +151,82 @@ def testr_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
             compare_2_coursors(pg_cursor, sq_lite_curs)
 
 
-def test_etl(pg_conn, es_factory):
+def test_etl_pg_to_es(pg_conn, es_factory):
     pg_to_es.main(pg_conn=pg_conn, es_factory=es_factory)
+
+
+def test_number_of_fw(es_conn: Elasticsearch):
+    resp = es_conn.search(index="movies", query={"match_all": {}})
+
+    assert resp["hits"]["total"]["value"] == 999
+
+
+def test_nans(es_conn: Elasticsearch):
+    resp = es_conn.search(index="movies", query={"query_string": {"query": "N\\A"}})
+
+    assert resp["hits"]["total"]["value"] == 2
+
+
+def test_search_camp(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={
+            "multi_match": {
+                "query": "camp",
+                "fuzziness": "auto",
+                "fields": [
+                    "actors_names",
+                    "writers_names",
+                    "title",
+                    "description",
+                    "genre",
+                ],
+            }
+        },
+    )
+
+    assert resp["hits"]["total"]["value"] == 24
+
+
+def test_actor_query(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={
+            "nested": {
+                "path": "actors",
+                "query": {"bool": {"must": [{"match": {"actors.name": "Greg Camp"}}]}},
+            }
+        },
+    )
+
+    assert resp["hits"]["total"]["value"] == 6
+
+
+def test_find_filed_duplicates(es_conn: Elasticsearch):
+
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "68dfb5e2-7014-4738-a2da-c65bd41f5af5"}}},
+    )
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["writers_names"] == ["Lucien Hubbard"]
+
+
+def test_one_writer(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "24eafcd7-1018-4951-9e17-583e2554ef0a"}}},
+    )
+
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["writers_names"] == ["Craig Hutchinson"]
+
+
+def test_no_writer(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "479f20b0-58d1-4f16-8944-9b82f5b1f22a"}}},
+    )
+
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["directors_names"] == []
