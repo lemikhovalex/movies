@@ -1,8 +1,19 @@
+import logging
 import sqlite3
 
+import pytest
 from elasticsearch import Elasticsearch
 
-from etl import pg_to_es, sqlite_to_postgres
+from etl import sqlite_to_postgres
+from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
+from etl.pg_to_es.loaders import Loader
+from etl.pg_to_es.pipelines import MoviesETL
+from etl.pg_to_es.transformers import PgToESTransformer
+from etl.state import BaseUniqueStorage
+
+LOGGER_NAME = "logs/etl.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 BATCH_SIZE = 256
 TABLE_SQLITE_PG = {
@@ -151,8 +162,61 @@ def test_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
             compare_2_coursors(pg_cursor, sq_lite_curs)
 
 
-def test_etl_pg_to_es(pg_conn, es_factory):
-    pg_to_es.main(pg_conn=pg_conn, es_factory=es_factory)
+@pytest.mark.parametrize(
+    "extracter,",
+    [
+        "person_extracter",
+        "genre_extracter",
+        "fw_extracter",
+    ],
+)
+def test_extraction_to_q(
+    extracter: IPEMExtracter, fw_queue: BaseUniqueStorage, request
+):
+    extracter = request.getfixturevalue(extracter)
+    buckets = []
+    baes_prod = extracter.produce_base()
+
+    for base_batch in baes_prod:
+        buckets.append(base_batch)
+
+    for base_batch in buckets:
+        target_ids = extracter.get_target_ids(base_batch)
+
+    for base_batch in buckets:
+        target_ids = extracter.get_target_ids(base_batch)
+
+        fw_queue.update(target_ids)
+
+
+def test_q_size(fw_queue: BaseUniqueStorage):
+    assert len(fw_queue) == 999
+
+
+def test_extracted_from_q(fw_queue: BaseUniqueStorage, pg_conn):
+
+    with pg_conn.cursor() as pg_cursor:
+        pg_cursor.execute("SELECT COUNT(*) FROM content.film_work;")
+        rows_pg = pg_cursor.fetchone()[0]
+    assert len(fw_queue) == rows_pg
+
+
+def test_fill_es_from_q(pg_conn, fw_queue: BaseUniqueStorage, es_factory):
+    q_extracter = TargetExtracer(
+        pg_connection=pg_conn, u_storage=fw_queue, batch_size=512
+    )
+    transformer = PgToESTransformer()
+    loader = Loader(index="movies", es_factory=es_factory, debug=True)
+    etl = MoviesETL(
+        extracter=q_extracter,
+        transformer=transformer,
+        loader=loader,
+    )
+    etl.run()
+
+
+# def test_etl_pg_to_es(pg_conn, es_factory):
+#     pg_to_es.main(pg_conn=pg_conn, es_factory=es_factory)
 
 
 def test_number_of_fw(es_conn: Elasticsearch):
