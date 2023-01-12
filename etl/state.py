@@ -4,6 +4,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Sequence
 
+from more_itertools import chunked
+
 LOGGER_NAME = "logs/state.log"
 logger = logging.getLogger(LOGGER_NAME)
 logger.addHandler(logging.FileHandler(LOGGER_NAME))
@@ -85,11 +87,11 @@ class BaseUniqueStorage(ABC):
         ...
 
     @abstractmethod
-    def pop(self, batch_size: int) -> Sequence[Any]:
+    def __len__(self) -> int:
         ...
 
     @abstractmethod
-    def __len__(self) -> int:
+    def get_iterator(self, batch_size: int) -> Iterable[Sequence[Any]]:
         ...
 
 
@@ -102,11 +104,10 @@ class GenericQueue(BaseUniqueStorage):
         self._storage.update(items)
         logger.info("GenericQueue::State succesively updated")
 
-    def pop(self, batch_size: int) -> Sequence[Any]:
-        _batch_size = min(batch_size, len(self))
-
-        logger.info(f"GenericQueue::gonna pop {_batch_size} items")
-        return [self._storage.pop() for _ in range(_batch_size)]
+    def get_iterator(self, batch_size: int) -> Iterable[Sequence[Any]]:
+        ch_iter = chunked(self._storage, n=batch_size)
+        for batch in ch_iter:
+            yield batch
 
     def __len__(self) -> int:
         return len(self._storage)
