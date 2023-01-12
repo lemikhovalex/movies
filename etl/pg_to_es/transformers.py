@@ -7,7 +7,7 @@ from etl.pg_to_es.base import ITransformer
 from etl.pg_to_es.data_structures import ESGenre, ESPerson, MergedFromPg, ToES
 from etl.utils import process_exception
 
-LOGGER_NAME = "transformer.log"
+LOGGER_NAME = "logs/transformer.log"
 logger = logging.getLogger(LOGGER_NAME)
 logger.addHandler(logging.FileHandler(LOGGER_NAME))
 

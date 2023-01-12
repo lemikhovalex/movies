@@ -1,6 +1,19 @@
+import logging
 import sqlite3
 
-from etl import pg_to_es, sqlite_to_postgres
+import pytest
+from elasticsearch import Elasticsearch
+
+from etl import sqlite_to_postgres
+from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
+from etl.pg_to_es.loaders import Loader
+from etl.pg_to_es.pipelines import MoviesETL
+from etl.pg_to_es.transformers import PgToESTransformer
+from etl.state import BaseUniqueStorage
+
+LOGGER_NAME = "logs/etl.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 BATCH_SIZE = 256
 TABLE_SQLITE_PG = {
@@ -100,7 +113,7 @@ def test_table_names(pg_conn, sqlite_conn: sqlite3.Connection):
             assert t_name not in sq_tables
 
 
-def test_etl_process(pg_conn, sqlite_conn: sqlite3.Connection):
+def test_etl_sqlite_to_pg(pg_conn, sqlite_conn: sqlite3.Connection):
     sqlite_to_postgres.main(
         pg_conn=pg_conn, sqlite_conn=sqlite_conn, batch_size=BATCH_SIZE
     )
@@ -124,7 +137,7 @@ def test_number_of_rows(pg_conn, sqlite_conn: sqlite3.Connection):
         sq_lite_curs.close()
 
 
-def testr_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
+def test_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
 
     with pg_conn.cursor() as pg_cursor:
         sq_lite_curs = sqlite_conn.cursor()
@@ -149,5 +162,166 @@ def testr_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
             compare_2_coursors(pg_cursor, sq_lite_curs)
 
 
-def test_etl(pg_conn, es_factory):
-    pg_to_es.main(pg_conn=pg_conn, es_factory=es_factory)
+@pytest.mark.parametrize(
+    "extracter,queue",
+    [
+        (
+            "person_extracter",
+            "person_queue",
+        ),
+        (
+            "genre_extracter",
+            "genre_queue",
+        ),
+        (
+            "fw_extracter",
+            "fw_queue",
+        ),
+    ],
+)
+def test_fill_base_q(extracter: IPEMExtracter, queue: BaseUniqueStorage, request):
+    extracter = request.getfixturevalue(extracter)
+    queue = request.getfixturevalue(queue)
+    baes_prod = extracter.produce_base()
+
+    for base_batch in baes_prod:
+        queue.update(base_batch)
+
+
+@pytest.mark.parametrize(
+    "extracter,queue,batch_size",
+    [
+        (
+            "person_extracter",
+            "person_queue",
+            5,
+        ),
+        (
+            "genre_extracter",
+            "genre_queue",
+            1,
+        ),
+    ],
+)
+def test_extraction_to_q(
+    fw_queue: BaseUniqueStorage,
+    extracter: IPEMExtracter,
+    queue: BaseUniqueStorage,
+    batch_size: int,
+    request,
+):
+    extracter = request.getfixturevalue(extracter)
+    queue = request.getfixturevalue(queue)
+
+    base_prod = queue.get_iterator(batch_size)
+
+    for base_batch in base_prod:
+        target_ids = extracter.get_target_ids(base_batch)
+        fw_queue.update(target_ids)
+
+
+def test_q_size(fw_queue: BaseUniqueStorage):
+    assert len(fw_queue) == 999
+
+
+def test_extracted_from_q(fw_queue: BaseUniqueStorage, pg_conn):
+
+    with pg_conn.cursor() as pg_cursor:
+        pg_cursor.execute("SELECT COUNT(*) FROM content.film_work;")
+        rows_pg = pg_cursor.fetchone()[0]
+    assert len(fw_queue) == rows_pg
+
+
+def test_fill_es_from_q(pg_conn, fw_queue: BaseUniqueStorage, es_factory):
+    q_extracter = TargetExtracer(
+        pg_connection=pg_conn, u_storage=fw_queue, batch_size=512
+    )
+    transformer = PgToESTransformer()
+    loader = Loader(index="movies", es_factory=es_factory, debug=True)
+    etl = MoviesETL(
+        extracter=q_extracter,
+        transformer=transformer,
+        loader=loader,
+    )
+    etl.run()
+
+
+# def test_etl_pg_to_es(pg_conn, es_factory):
+#     pg_to_es.main(pg_conn=pg_conn, es_factory=es_factory)
+
+
+def test_number_of_fw(es_conn: Elasticsearch):
+    resp = es_conn.search(index="movies", query={"match_all": {}})
+
+    assert resp["hits"]["total"]["value"] == 999
+
+
+def test_nans(es_conn: Elasticsearch):
+    resp = es_conn.search(index="movies", query={"query_string": {"query": "N\\A"}})
+
+    assert resp["hits"]["total"]["value"] == 2
+
+
+def test_search_camp(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={
+            "multi_match": {
+                "query": "camp",
+                "fuzziness": "auto",
+                "fields": [
+                    "actors_names",
+                    "writers_names",
+                    "title",
+                    "description",
+                    "genre",
+                ],
+            }
+        },
+    )
+
+    assert resp["hits"]["total"]["value"] == 24
+
+
+def test_actor_query(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={
+            "nested": {
+                "path": "actors",
+                "query": {"bool": {"must": [{"match": {"actors.name": "Greg Camp"}}]}},
+            }
+        },
+    )
+
+    assert resp["hits"]["total"]["value"] == 6
+
+
+def test_find_filed_duplicates(es_conn: Elasticsearch):
+
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "68dfb5e2-7014-4738-a2da-c65bd41f5af5"}}},
+    )
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["writers_names"] == ["Lucien Hubbard"]
+
+
+def test_one_writer(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "24eafcd7-1018-4951-9e17-583e2554ef0a"}}},
+    )
+
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["writers_names"] == ["Craig Hutchinson"]
+
+
+def test_no_writer(es_conn: Elasticsearch):
+    resp = es_conn.search(
+        index="movies",
+        query={"term": {"id": {"value": "479f20b0-58d1-4f16-8944-9b82f5b1f22a"}}},
+    )
+
+    assert resp["hits"]["total"]["value"] == 1
+    assert resp["hits"]["hits"][0]["_source"]["directors_names"] == []
