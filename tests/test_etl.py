@@ -163,29 +163,60 @@ def test_every_table_every_line(pg_conn, sqlite_conn: sqlite3.Connection):
 
 
 @pytest.mark.parametrize(
-    "extracter,",
+    "extracter,queue",
     [
-        "person_extracter",
-        "genre_extracter",
-        "fw_extracter",
+        (
+            "person_extracter",
+            "person_queue",
+        ),
+        (
+            "genre_extracter",
+            "genre_queue",
+        ),
+        (
+            "fw_extracter",
+            "fw_queue",
+        ),
     ],
 )
-def test_extraction_to_q(
-    extracter: IPEMExtracter, fw_queue: BaseUniqueStorage, request
-):
+def test_fill_base_q(extracter: IPEMExtracter, queue: BaseUniqueStorage, request):
     extracter = request.getfixturevalue(extracter)
-    buckets = []
+    queue = request.getfixturevalue(queue)
     baes_prod = extracter.produce_base()
 
     for base_batch in baes_prod:
-        buckets.append(base_batch)
+        queue.update(base_batch)
 
-    for base_batch in buckets:
+
+@pytest.mark.parametrize(
+    "extracter,queue,batch_size",
+    [
+        (
+            "person_extracter",
+            "person_queue",
+            5,
+        ),
+        (
+            "genre_extracter",
+            "genre_queue",
+            1,
+        ),
+    ],
+)
+def test_extraction_to_q(
+    fw_queue: BaseUniqueStorage,
+    extracter: IPEMExtracter,
+    queue: BaseUniqueStorage,
+    batch_size: int,
+    request,
+):
+    extracter = request.getfixturevalue(extracter)
+    queue = request.getfixturevalue(queue)
+
+    base_prod = queue.get_iterator(batch_size)
+
+    for base_batch in base_prod:
         target_ids = extracter.get_target_ids(base_batch)
-
-    for base_batch in buckets:
-        target_ids = extracter.get_target_ids(base_batch)
-
         fw_queue.update(target_ids)
 
 

@@ -86,6 +86,16 @@ def fw_queue() -> BaseUniqueStorage:
 
 
 @pytest.fixture(scope="session")
+def person_queue() -> BaseUniqueStorage:
+    return GenericQueue()
+
+
+@pytest.fixture(scope="session")
+def genre_queue() -> BaseUniqueStorage:
+    return GenericQueue()
+
+
+@pytest.fixture(scope="session")
 def person_extracter(pg_conn) -> IExtracter:
     return PersonExtracter(
         pg_connection=pg_conn,
