@@ -1,7 +1,7 @@
 import datetime
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable, List, Optional, Sequence
 
 from psycopg2.errors import SyntaxError
 
@@ -127,7 +127,7 @@ class BaseIdsExtracter(IExtracter, ABC):
         pass
 
     @abstractmethod
-    def get_target_ids(self, ids: list) -> list:
+    def get_target_ids(self, ids: Sequence[Any]) -> list:
         pass
 
     def extract(self) -> Iterable[List[Any]]:
@@ -254,14 +254,11 @@ class TargetExtracer(IExtracter):
         logger.info(
             f"Have {len(self.u_storage)} items in q, gonna pop {self.batch_size}."
         )
-        while len(self.u_storage) > 0:
-            ids = self.u_storage.pop(self.batch_size)
+        ids_batch_iter = self.u_storage.get_iterator(self.batch_size)
+        for batch in ids_batch_iter:
             yield merge_data_on_fw_ids(
-                fw_ids=ids,
+                fw_ids=batch,
                 pg_connection=self.pg_connection,
-            )
-            logger.info(
-                f"Succesively pop {self.batch_size}, {len(self.u_storage)} awaits"
             )
 
     def save_state(self):
