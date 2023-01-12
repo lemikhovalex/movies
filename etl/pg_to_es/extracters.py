@@ -1,7 +1,7 @@
 import datetime
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Generator, Iterable, List, Optional
+from typing import Any, Iterable, List, Optional
 
 from psycopg2.errors import SyntaxError
 
@@ -11,7 +11,7 @@ from etl.pg_to_es.data_structures import MergedFromPg
 from etl.state import BaseUniqueStorage, State
 from etl.utils import process_exception
 
-LOGGER_NAME = "extracter.log"
+LOGGER_NAME = "logs/extracter.log"
 logger = logging.getLogger(LOGGER_NAME)
 logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
@@ -62,7 +62,7 @@ def fetch_upd_ids_from_table(
 @backoff()
 def merge_data_on_fw_ids(
     pg_connection,
-    fw_ids: list,
+    fw_ids: Iterable[Any],
 ) -> List[MergedFromPg]:
     with pg_connection.cursor() as cursor:
         query = MergedFromPg.select_query
@@ -87,8 +87,6 @@ def enrich(
     pg_connection,
     table: str,
     ids: list,
-    batch_size: int,
-    state: State,
     field: Optional[str] = None,
     m2m_table: Optional[str] = None,
 ) -> list:
@@ -129,12 +127,12 @@ class BaseIdsExtracter(IExtracter, ABC):
         pass
 
     @abstractmethod
-    def enrich_to_target(self, ids: list) -> list:
+    def get_target_ids(self, ids: list) -> list:
         pass
 
     def extract(self) -> Iterable[List[Any]]:
         for proxy_ids in self.produce_base():
-            yield self.enrich_to_target(proxy_ids)
+            yield self.get_target_ids(proxy_ids)
 
     @abstractmethod
     def save_state(self):
@@ -200,17 +198,16 @@ class GenreExtracter(IPEMExtracter):
                 offset_before = int(self.state.get_state("prod_offset"))
                 new_offset = offset_before + self.batch_size
             self.state_to_upd["prod_offset"] = new_offset
+            self.save_state()
             yield out
 
-    def enrich_to_target(self, ids: list) -> list:
+    def get_target_ids(self, ids: list) -> list:
         if len(ids) == 0:
             return []
         return enrich(
             pg_connection=self._connect,
             table=self.table,
             ids=ids,
-            batch_size=self.batch_size,
-            state=self.state,
         )
 
     def merge(self, ids: list) -> List[MergedFromPg]:
@@ -234,7 +231,7 @@ class FilmworkExtracter(GenreExtracter):
     def __init__(self, pg_connection, state: State, batch_size: int = 1):
         super(FilmworkExtracter, self).__init__(pg_connection, state, batch_size)
 
-    def enrich_to_target(self, ids: list) -> list:
+    def get_target_ids(self, ids: list) -> list:
         return ids
 
 
@@ -246,13 +243,26 @@ class PersonExtracter(GenreExtracter):
 
 
 class TargetExtracer(IExtracter):
-    def __init__(self, u_storage: BaseUniqueStorage, batch_size: int) -> None:
+    def __init__(
+        self, pg_connection, u_storage: BaseUniqueStorage, batch_size: int
+    ) -> None:
         self.u_storage = u_storage
         self.batch_size = batch_size
+        self.pg_connection = pg_connection
 
     def extract(self) -> Iterable[List[Any]]:
+        logger.info(
+            f"Have {len(self.u_storage)} items in q, gonna pop {self.batch_size}."
+        )
         while len(self.u_storage) > 0:
-            yield list(self.u_storage.pop(self.batch_size))
+            ids = self.u_storage.pop(self.batch_size)
+            yield merge_data_on_fw_ids(
+                fw_ids=ids,
+                pg_connection=self.pg_connection,
+            )
+            logger.info(
+                f"Succesively pop {self.batch_size}, {len(self.u_storage)} awaits"
+            )
 
     def save_state(self):
         ...

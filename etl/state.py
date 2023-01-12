@@ -1,8 +1,12 @@
 import abc
 import json
-import random
+import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
+
+LOGGER_NAME = "logs/state.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
 class BaseStateStorage:
@@ -33,6 +37,17 @@ class JsonFileStorage(BaseStateStorage):
     def save_state(self, state: dict):
         with open(self.file_path, "w") as f:
             json.dump(state, f)
+
+
+class GenericFileStorage(BaseStateStorage):
+    def __init__(self) -> None:
+        self.data = dict()
+
+    def retrieve_state(self) -> dict:
+        return self.data
+
+    def save_state(self, state: dict):
+        ...
 
 
 class State:
@@ -70,7 +85,7 @@ class BaseUniqueStorage(ABC):
         ...
 
     @abstractmethod
-    def pop(self, batch_size: int) -> Iterable[Any]:
+    def pop(self, batch_size: int) -> Sequence[Any]:
         ...
 
     @abstractmethod
@@ -83,11 +98,15 @@ class GenericQueue(BaseUniqueStorage):
         self._storage = set()
 
     def update(self, items: Iterable[Any]) -> None:
+        logger.info("GenericQueue::Gonna update state with")
         self._storage.update(items)
+        logger.info("GenericQueue::State succesively updated")
 
-    def pop(self, batch_size: int) -> Iterable[Any]:
-        for _ in range(batch_size):
-            yield self._storage.pop()
+    def pop(self, batch_size: int) -> Sequence[Any]:
+        _batch_size = min(batch_size, len(self))
+
+        logger.info(f"GenericQueue::gonna pop {_batch_size} items")
+        return [self._storage.pop() for _ in range(_batch_size)]
 
     def __len__(self) -> int:
         return len(self._storage)
