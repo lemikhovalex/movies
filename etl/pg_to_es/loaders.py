@@ -14,9 +14,12 @@ logger.addHandler(logging.FileHandler(LOGGER_NAME))
 
 
 class Loader(ILoader):
-    def __init__(self, index: str, es_factory: Callable[[], Elasticsearch]):
+    def __init__(
+        self, index: str, es_factory: Callable[[], Elasticsearch], debug: bool = False
+    ):
         self.es_conn_factory = es_factory
         self.index = index
+        self.debug = debug
 
     def load(self, data_to_load: List[ToES]):
         actions = []
@@ -27,11 +30,7 @@ class Loader(ILoader):
             actions.append(to_app)
         # if we dont match index we shall not wait, we better write
         try:
-            helpers.bulk(
-                es_conn,
-                actions,
-                index=self.index,
-            )
+            helpers.bulk(es_conn, actions, index=self.index, refresh=self.debug)
         except helpers.BulkIndexError as excep:
             process_exception(excep, logger)
 
