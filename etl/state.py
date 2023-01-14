@@ -4,6 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Sequence
 
+import redis
 from more_itertools import chunked
 
 LOGGER_NAME = "logs/state.log"
@@ -83,7 +84,7 @@ class State:
 
 class BaseUniqueStorage(ABC):
     @abstractmethod
-    def update(self, items: Iterable[Any]) -> None:
+    def update(self, items: Sequence[Any]) -> None:
         ...
 
     @abstractmethod
@@ -99,7 +100,7 @@ class GenericQueue(BaseUniqueStorage):
     def __init__(self) -> None:
         self._storage = set()
 
-    def update(self, items: Iterable[Any]) -> None:
+    def update(self, items: Sequence[Any]) -> None:
         logger.info("GenericQueue::Gonna update state with")
         self._storage.update(items)
         logger.info("GenericQueue::State succesively updated")
@@ -111,3 +112,29 @@ class GenericQueue(BaseUniqueStorage):
 
     def __len__(self) -> int:
         return len(self._storage)
+
+
+class RedisQueue(BaseUniqueStorage):
+    def __init__(self, q_name: str, conn: redis.Redis) -> None:
+        self._storage = set()
+        self._q_name = q_name
+        self.conn = conn
+
+    def update(self, items: Sequence[Any]) -> None:
+        if len(items) > 0:
+            self.conn.sadd(self._q_name, *items)
+
+    def get_iterator(self, batch_size: int) -> Iterable[Sequence[Any]]:
+        cursor = 0
+        k = 0
+        while (cursor != 0) or (k == 0):
+            k += 1
+            cursor, values = self.conn.sscan(
+                name=self._q_name,
+                cursor=cursor,
+                count=batch_size,
+            )
+            yield values
+
+    def __len__(self) -> int:
+        return self.conn.scard(self._q_name)

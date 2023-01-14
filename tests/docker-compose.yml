@@ -45,6 +45,9 @@ services:
       - admin_db
       - elasticsearch
 
+  redis:
+    image: redis:6-alpine
+
 volumes:
   admin_db_vol:
   admin_static:
