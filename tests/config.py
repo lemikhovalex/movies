@@ -10,6 +10,8 @@ class Config(BaseSettings):
     db_user: str
     db_name: str
     db_password: str
+    redis_port: int = 6379
+    redis_host: str = "redis"
 
 
 CONFIG = Config()
