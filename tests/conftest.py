@@ -3,12 +3,13 @@ from typing import Callable, Generator
 
 import psycopg2
 import pytest
+import redis
 from elasticsearch import Elasticsearch
 from psycopg2.extras import DictCursor
 
 from etl.pg_to_es.base import IExtracter
 from etl.pg_to_es.extracters import FilmworkExtracter, GenreExtracter, PersonExtracter
-from etl.state import BaseUniqueStorage, GenericFileStorage, GenericQueue, State
+from etl.state import BaseUniqueStorage, GenericFileStorage, RedisQueue, State
 from tests import constants
 from tests.config import CONFIG
 
@@ -81,18 +82,32 @@ def es_conn(es_factory: Callable[[], Elasticsearch]):
 
 
 @pytest.fixture(scope="session")
-def fw_queue() -> BaseUniqueStorage:
-    return GenericQueue()
+def redis_conn():
+    r = redis.Redis(
+        port=CONFIG.redis_port,
+        host=CONFIG.redis_host,
+        decode_responses=True,
+    )
+    r.flushall()
+
+    yield r
+
+    r.flushall()
 
 
 @pytest.fixture(scope="session")
-def person_queue() -> BaseUniqueStorage:
-    return GenericQueue()
+def fw_queue(redis_conn: redis.Redis) -> BaseUniqueStorage:
+    return RedisQueue(q_name="fw", conn=redis_conn)
 
 
 @pytest.fixture(scope="session")
-def genre_queue() -> BaseUniqueStorage:
-    return GenericQueue()
+def person_queue(redis_conn: redis.Redis) -> BaseUniqueStorage:
+    return RedisQueue(q_name="p", conn=redis_conn)
+
+
+@pytest.fixture(scope="session")
+def genre_queue(redis_conn: redis.Redis) -> Generator[BaseUniqueStorage, None, None]:
+    yield RedisQueue(q_name="g", conn=redis_conn)
 
 
 @pytest.fixture(scope="session")

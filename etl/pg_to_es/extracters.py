@@ -123,7 +123,7 @@ def enrich(
 
 class BaseIdsExtracter(IExtracter, ABC):
     @abstractmethod
-    def produce_base(self) -> Iterable[Any]:
+    def produce_base(self) -> Iterable[Sequence[Any]]:
         pass
 
     @abstractmethod
