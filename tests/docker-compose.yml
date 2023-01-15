@@ -31,7 +31,7 @@ x-airflow-common:
     - ./../dags:/opt/airflow/dags
     - af_logs:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
-    - ./..:/srv/src
+    - ./..:/srv/app
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
