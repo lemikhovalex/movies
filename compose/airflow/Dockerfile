@@ -1,5 +1,8 @@
 FROM apache/airflow:2.3.0-python3.10
 
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
 USER root
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -10,12 +13,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-dev \
     pkg-config
 
-COPY requirements.txt /srv/src/
-RUN chown -R airflow /srv/src/
+COPY requirements.txt /srv/app/
+RUN chown -R airflow /srv/app/
 
 USER airflow
-RUN pip install -r /srv/src/requirements.txt --no-cache-dir
+RUN pip install -r /srv/app/requirements.txt --no-cache-dir
 
-COPY . /srv/src/
+USER root
+COPY . /srv/app/
+RUN chown -R airflow /srv/app/
+USER airflow
+
 ARG DEBUG
-RUN if [ "${DEBUG}" = "1" ] ; then pip install /srv/src/ ; else pip install -e /srv/src/ ; fi
+RUN pip install -e /srv/app/

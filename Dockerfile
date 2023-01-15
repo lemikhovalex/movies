@@ -28,5 +28,5 @@ RUN chmod +x /start.sh
 RUN chmod +x test.sh
 
 VOLUME /app
-
+RUN pip install -e .
 CMD /start.sh
