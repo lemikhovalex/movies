@@ -2,25 +2,41 @@ version: '3.9'
 
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.0.1}
+  build:
+    context: ../
+    dockerfile: compose/airflow/Dockerfile
+    args:
+      DEBUG: ${DEBUG}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${DB_AF_USER}:${DB_AF_PASSWORD}@af_db:${DB_AF_PORT}/${DB_AF_NAME}
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${DB_AF_USER}:${DB_AF_PASSWORD}@af_db:${DB_AF_PORT}/${DB_AF_NAME}
+    AIRFLOW__CELERY__BROKER_URL: redis://:@${REDIS_HOST}:${REDIS_PORT}/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    DB_HOST: ${DB_HOST}
+    DB_PORT: ${DB_PORT}
+    DB_PASSWORD: ${DB_PASSWORD}
+    DB_USER: ${DB_USER}
+    DB_NAME: ${DB_NAME}
+    DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+    DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+    DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
+    ES_HOST: ${ES_HOST}
+    ES_PORT: ${ES_PORT}
+
   volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./plugins:/opt/airflow/plugins
-  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+    - ./../dags:/opt/airflow/dags
+    - af_logs:/opt/airflow/logs
+    - af_plugins:/opt/airflow/plugins
+    - ./..:/srv/src
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
       condition: service_healthy
-    postgres:
+    af_db:
       condition: service_healthy
 
 services:
@@ -89,9 +105,21 @@ services:
       POSTGRES_PORT: ${DB_AF_PORT}
       PGDATA: "/var/lib/postgresql/data"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "${DB_AF_USER}" ]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DB_AF_USER}",
+          "-d",
+          "${DB_AF_NAME}",
+          "-h",
+          "${DB_AF_HOST}",
+          "-p",
+          "${DB_AF_PORT}"
+        ]
       interval: 5s
-      retries: 5
+      retries: 10
     volumes:
       - af_db_vol:/var/lib/postgresql/data
     command: -p ${DB_AF_PORT}
@@ -119,9 +147,9 @@ services:
           "--fail",
           "http://localhost:8080/health"
         ]
-      interval: 10s
+      interval: 5s
       timeout: 10s
-      retries: 5
+      retries: 10
     restart: always
 
   airflow-scheduler:
@@ -139,7 +167,6 @@ volumes:
   admin_db_vol:
   af_db_vol:
   admin_static:
-  af_dags:
   af_logs:
   af_plugins:
   af_cfg:

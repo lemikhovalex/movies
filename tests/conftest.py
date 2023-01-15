@@ -7,11 +7,11 @@ import redis
 from elasticsearch import Elasticsearch
 from psycopg2.extras import DictCursor
 
+from etl.config import CONFIG
 from etl.pg_to_es.base import IExtracter
 from etl.pg_to_es.extracters import FilmworkExtracter, GenreExtracter, PersonExtracter
 from etl.state import BaseUniqueStorage, GenericFileStorage, RedisQueue, State
 from tests import constants
-from tests.config import CONFIG
 
 
 def clean_pg(pg_conn):

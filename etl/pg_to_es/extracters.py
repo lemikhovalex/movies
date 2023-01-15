@@ -142,7 +142,7 @@ class BaseIdsExtracter(IExtracter, ABC):
 class IPEMExtracter(BaseIdsExtracter, ABC):
     state: State
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.state_to_upd = {}
 
     @abstractmethod

@@ -2,7 +2,7 @@ import logging
 import time
 from functools import wraps
 
-from .utils import process_exception
+from etl.utils import process_exception
 
 LOGGER_NAME = "logs/backoff.log"
 logger = logging.getLogger(LOGGER_NAME)
