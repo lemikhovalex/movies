@@ -16,6 +16,7 @@ x-airflow-common:
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     DB_HOST: ${DB_HOST}
     DB_PORT: ${DB_PORT}
     DB_PASSWORD: ${DB_PASSWORD}
@@ -61,7 +62,7 @@ services:
       cluster.routing.allocation.disk.threshold_enabled: false
       xpack.security.enabled: false
       discovery.type: single-node
-      ES_JAVA_OPTS: -Xms1000m -Xmx1000m
+      ES_JAVA_OPTS: -Xms1500m -Xmx1500m
 
   admin:
     container_name: admin
