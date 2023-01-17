@@ -34,7 +34,7 @@ def sqlite_conn() -> Generator[sqlite3.Connection, None, None]:
         yield sqlite_conn
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def pg_conn():
 
     dsl = {
@@ -50,7 +50,7 @@ def pg_conn():
         clean_pg(pg_conn)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def es_factory() -> Generator[Callable[[], Elasticsearch], None, None]:
     url = f"http://{CONFIG.es_host}:{CONFIG.es_port}"
     es = Elasticsearch(url)
@@ -76,12 +76,12 @@ def es_factory() -> Generator[Callable[[], Elasticsearch], None, None]:
     es.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def es_conn(es_factory: Callable[[], Elasticsearch]):
     return es_factory()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def redis_conn():
     r = redis.Redis(
         port=CONFIG.redis_port,
@@ -95,22 +95,22 @@ def redis_conn():
     r.flushall()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def fw_queue(redis_conn: redis.Redis) -> BaseUniqueStorage:
     return RedisQueue(q_name="fw", conn=redis_conn)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def person_queue(redis_conn: redis.Redis) -> BaseUniqueStorage:
     return RedisQueue(q_name="p", conn=redis_conn)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def genre_queue(redis_conn: redis.Redis) -> Generator[BaseUniqueStorage, None, None]:
     yield RedisQueue(q_name="g", conn=redis_conn)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def person_extracter(pg_conn) -> IExtracter:
     return PersonExtracter(
         pg_connection=pg_conn,
@@ -119,7 +119,7 @@ def person_extracter(pg_conn) -> IExtracter:
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def genre_extracter(pg_conn) -> IExtracter:
     return GenreExtracter(
         pg_connection=pg_conn,
@@ -128,7 +128,7 @@ def genre_extracter(pg_conn) -> IExtracter:
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def fw_extracter(pg_conn) -> IExtracter:
     return FilmworkExtracter(
         pg_connection=pg_conn,
