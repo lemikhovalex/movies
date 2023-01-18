@@ -82,6 +82,7 @@ services:
       ES_HOST: ${ES_HOST}
       ES_PORT: ${ES_PORT}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
+      LOGGER_PATH: "/app/logs"
     depends_on:
       - admin_db
       - elasticsearch
