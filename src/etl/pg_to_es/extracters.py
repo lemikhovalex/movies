@@ -1,19 +1,24 @@
 import datetime
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, List, Optional, Sequence
 
 from psycopg2.errors import SyntaxError
 
 from etl.backoff import backoff
+from etl.config import CONFIG
 from etl.pg_to_es.base import IExtracter
 from etl.pg_to_es.data_structures import MergedFromPg
 from etl.state import BaseUniqueStorage, State
 from etl.utils import process_exception
 
-LOGGER_NAME = "logs/extracter.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "extracter.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 FMT = "%Y%m%d%H%M%S"  # ex. 20110104172008 -> Jan. 04, 2011 5:20:08pm
 # after all writing datetime.datetime.min to str and back is challanging

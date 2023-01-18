@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseSettings
 
 
@@ -12,6 +14,7 @@ class Config(BaseSettings):
     db_password: str
     redis_port: int = 6379
     redis_host: str = "redis"
+    logger_path: Optional[str] = None
 
 
 CONFIG = Config()

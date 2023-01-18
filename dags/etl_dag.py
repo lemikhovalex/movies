@@ -11,7 +11,7 @@ with models.DAG(
 
     fill_fw_es = BashOperator(
         task_id=f"fill_es_fw_from_q",
-        bash_command=f"""cd /srv/app && python src/etl/cli.py fill_es_from_q --queue=fw --batch_size=512""",
+        bash_command=f"cd /srv/app/src/etl/ && python cli.py fill-es-from-q --queue=fw --batch-size=512",
         dag=dag,
     )
 
@@ -24,9 +24,9 @@ with models.DAG(
             task_id=f"fill_base_q_for_{extracter}",
             bash_command=" ".join(
                 [
-                    "cd /srv/app && python src/etl/cli.py fill_base_q",
-                    f"--extracter=FilmworkExtracter  --batch_size={batch_size}"
-                    f"--queue_name={queue_name}",
+                    "cd /srv/app/src/etl/ && python cli.py fill-base-q",
+                    f"--extracter={extracter}  --batch-size={batch_size}",
+                    f"--queue-name={queue_name}",
                 ]
             ),
             dag=dag,
@@ -37,15 +37,15 @@ with models.DAG(
                 task_id=f"fill_fw_queue_from_{queue_name}_queue",
                 bash_command=" ".join(
                     [
-                        "cd /srv/app && python src/etl/cli.py fill_q_from_q",
-                        f"--extracter=FilmworkExtracter --batch_size={batch_size} --queue_name={queue_name}",
+                        "cd /srv/app/src/etl/ && python cli.py fill-q-from-q",
+                        f"--extracter=FilmworkExtracter --batch-size={batch_size} --source-queue={queue_name} --target-queue=fw",
                     ]
                 ),
                 dag=dag,
             )
         else:
             fill_fw_q_task = BashOperator(
-                task_id="empty_extract_fw_base_idx",
+                task_id="empty-extract-fw-base-idx",
                 bash_command="echo 1",
                 dag=dag,
             )
