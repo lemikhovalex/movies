@@ -5,6 +5,7 @@ import sqlite3
 import time
 from http import HTTPStatus
 
+import pytest
 import requests
 from elasticsearch import Elasticsearch
 from requests.auth import HTTPBasicAuth
@@ -64,6 +65,11 @@ TABLE_SQLITE_PG = {
         ("id", "id"),
     ],
 }
+
+
+@pytest.fixture()
+def dag_run_id() -> str:
+    return f"test_run_{datetime.datetime.now().strftime('%m%d%Y%H%M%S')}"
 
 
 def relace_brackets(q: str) -> str:
@@ -183,16 +189,33 @@ def test_es_avaliable(es_factory):
     conn.close()
 
 
-def test_dag():
+def test_dag(dag_run_id: str):
     resp = requests.post(
         "http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es/dagRuns",
         json={
-            "dag_run_id": f"test_run_{datetime.datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}",
+            "dag_run_id": dag_run_id,
         },
         auth=HTTPBasicAuth("airflow", "airflow"),
     )
-    time.sleep(20)
+    # time.sleep(20)
     assert resp.status_code == HTTPStatus.OK
+
+
+def test_dag_completion(dag_run_id):
+    s = time.time()
+    is_success: bool = False
+    status = "no_q"
+    while ((time.time() - s) < 20) and (not is_success):
+        resp = requests.get(
+            f"http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es/dagRuns/{dag_run_id}",
+            auth=HTTPBasicAuth("airflow", "airflow"),
+        )
+        assert resp.status_code == HTTPStatus.OK, dag_run_id + str(resp.json())
+        status = resp.json()["state"]
+        is_success = status == "success"
+        time.sleep(1)
+
+    assert is_success, status
 
 
 def test_number_of_fw(es_conn: Elasticsearch):
