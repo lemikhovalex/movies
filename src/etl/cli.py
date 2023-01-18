@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from typing import Type
 
@@ -24,9 +25,12 @@ pg_dsl = {
     "port": CONFIG.db_port,
 }
 
-LOGGER_NAME = "cli.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "cli.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 
 @click.group()

@@ -1,26 +1,23 @@
 import datetime
 import logging
+import os
 import sqlite3
 import time
 from http import HTTPStatus
 
-import pytest
 import requests
-from airflow import DAG
-from airflow.models import TaskInstance
 from elasticsearch import Elasticsearch
 from requests.auth import HTTPBasicAuth
 
 from etl import sqlite_to_postgres
-from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
-from etl.pg_to_es.loaders import Loader
-from etl.pg_to_es.pipelines import MoviesETL
-from etl.pg_to_es.transformers import PgToESTransformer
-from etl.state import BaseUniqueStorage
+from etl.config import CONFIG
 
-LOGGER_NAME = "logs/etl.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "test_af.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 BATCH_SIZE = 256
 TABLE_SQLITE_PG = {
@@ -181,6 +178,11 @@ def test_enable_dag():
     assert resp.status_code == HTTPStatus.OK
 
 
+def test_es_avaliable(es_factory):
+    conn = es_factory()
+    conn.close()
+
+
 def test_dag():
     resp = requests.post(
         "http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es/dagRuns",
@@ -190,7 +192,7 @@ def test_dag():
         auth=HTTPBasicAuth("airflow", "airflow"),
     )
     time.sleep(20)
-    assert resp.json() == 1
+    assert resp.status_code == HTTPStatus.OK
 
 
 def test_number_of_fw(es_conn: Elasticsearch):

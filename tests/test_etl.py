@@ -1,19 +1,24 @@
 import logging
+import os
 import sqlite3
 
 import pytest
 from elasticsearch import Elasticsearch
 
 from etl import sqlite_to_postgres
+from etl.config import CONFIG
 from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
 from etl.pg_to_es.loaders import Loader
 from etl.pg_to_es.pipelines import MoviesETL
 from etl.pg_to_es.transformers import PgToESTransformer
 from etl.state import BaseUniqueStorage
 
-LOGGER_NAME = "logs/etl.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "transformer.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 BATCH_SIZE = 256
 TABLE_SQLITE_PG = {
