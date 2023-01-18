@@ -1,3 +1,5 @@
+import logging
+import time
 from typing import Type
 
 import click
@@ -22,6 +24,15 @@ pg_dsl = {
     "port": CONFIG.db_port,
 }
 
+LOGGER_NAME = "cli.log"
+logger = logging.getLogger(LOGGER_NAME)
+logger.addHandler(logging.FileHandler(LOGGER_NAME))
+
+
+@click.group()
+def messages():
+    pass
+
 
 def get_es() -> Elasticsearch:
     url = f"http://{CONFIG.es_host}:{CONFIG.es_port}"
@@ -30,11 +41,22 @@ def get_es() -> Elasticsearch:
 
 
 @click.command()
+@click.option("--count-p", type=int)
+def hello(count_p: int):
+    logger.info("HELLO!")
+    for _ in range(count_p):
+        print("hello")
+        time.sleep(15)
+
+
+@click.command()
 @click.option("--extracter", type=str)
-@click.option("--batch_size", type=int)
-@click.option("--queue_name", type=str)
+@click.option("--batch-size", type=int)
+@click.option("--queue-name", type=str)
 def fill_base_q(extracter: str, queue_name: str, batch_size: int):
+    logger.info(f"Start task filling {queue_name!r} queue")
     extr_class: Type[IPEMExtracter] = getattr(extracters, extracter)
+    logger.info(f"Retrieve lextracer {extracter!r}")
     with psycopg2.connect(**pg_dsl, cursor_factory=DictCursor) as pg_conn:
         extracer = extr_class(
             pg_connection=pg_conn,
@@ -48,15 +70,18 @@ def fill_base_q(extracter: str, queue_name: str, batch_size: int):
             decode_responses=True,
         ) as redis_conn:
             queue = RedisQueue(q_name=queue_name, conn=redis_conn)
+            logger.info("prepare iterative loading to queue")
             for base_batch in baes_prod:
+                logger.info(f"prepare to load batch of {len(base_batch)}")
                 queue.update(base_batch)
+                logger.info(f"loaded batch of {len(base_batch)}")
 
 
 @click.command()
-@click.option("--target_queue", type=str)
+@click.option("--target-queue", type=str)
 @click.option("--extracter", type=str)
-@click.option("--source_queue", type=str)
-@click.option("--batch_size", type=int)
+@click.option("--source-queue", type=str)
+@click.option("--batch-size", type=int)
 def fill_q_from_q(
     target_queue: str,
     extracter: str,
@@ -86,7 +111,7 @@ def fill_q_from_q(
 
 @click.command()
 @click.option("--queue", type=str)
-@click.option("--batch_size", type=int)
+@click.option("--batch-size", type=int)
 def fill_es_from_q(queue: str, batch_size: int):
     with redis.Redis(
         port=CONFIG.redis_port,
@@ -106,3 +131,12 @@ def fill_es_from_q(queue: str, batch_size: int):
                 loader=loader,
             )
             etl.run()
+
+
+messages.add_command(hello)
+messages.add_command(fill_base_q)
+messages.add_command(fill_q_from_q)
+messages.add_command(fill_es_from_q)
+
+if __name__ == "__main__":
+    messages()
