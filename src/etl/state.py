@@ -1,15 +1,21 @@
 import abc
 import json
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Sequence
 
 import redis
 from more_itertools import chunked
 
-LOGGER_NAME = "logs/state.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+from etl.config import CONFIG
+
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "state.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 
 class BaseStateStorage:

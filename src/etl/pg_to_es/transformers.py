@@ -1,15 +1,20 @@
 import logging
+import os
 from typing import List
 
 import pandas as pd
 
+from etl.config import CONFIG
 from etl.pg_to_es.base import ITransformer
 from etl.pg_to_es.data_structures import ESGenre, ESPerson, MergedFromPg, ToES
 from etl.utils import process_exception
 
-LOGGER_NAME = "logs/transformer.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "transformer.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 
 def filter_persons(df: pd.DataFrame, role: str) -> List[ESPerson]:

@@ -1,6 +1,3 @@
-import sqlite3
-from typing import Generator
-
 import psycopg2
 import pytest
 from psycopg2.extras import DictCursor
@@ -10,12 +7,6 @@ from tests.src.utils.pg_utils import clean_pg
 
 
 @pytest.fixture(scope="session")
-def sqlite_conn() -> Generator[sqlite3.Connection, None, None]:
-    with sqlite3.connect("db.sqlite") as sqlite_conn:
-        yield sqlite_conn
-
-
-@pytest.fixture(scope="module")
 def pg_conn():
 
     dsl = {

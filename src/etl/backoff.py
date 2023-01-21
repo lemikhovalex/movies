@@ -1,12 +1,17 @@
 import logging
+import os
 import time
 from functools import wraps
 
-from .utils import process_exception
+from etl.config import CONFIG
+from etl.utils import process_exception
 
-LOGGER_NAME = "logs/backoff.log"
-logger = logging.getLogger(LOGGER_NAME)
-logger.addHandler(logging.FileHandler(LOGGER_NAME))
+if CONFIG.logger_path is not None:
+    LOGGER_NAME = os.path.join(CONFIG.logger_path, "backoff.log")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.addHandler(logging.FileHandler(LOGGER_NAME))
+else:
+    logger = logging
 
 
 def backoff(
