@@ -1,5 +1,25 @@
 version: '3.9'
 
+x-admin-db-common:
+  &admin-db-common
+  environment:
+    &admin-db-common-env
+    DB_HOST: ${DB_HOST}
+    DB_PORT: ${DB_PORT}
+    DB_PASSWORD: ${DB_PASSWORD}
+    DB_USER: ${DB_USER}
+    DB_NAME: ${DB_NAME}
+    DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
+    DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
+    DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
+
+x-es-common:
+  &es-common
+  environment:
+    &es-common-env
+    ES_HOST: ${ES_HOST}
+    ES_PORT: ${ES_PORT}
+
 x-airflow-common:
   &airflow-common
   build:
@@ -17,17 +37,8 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
-    DB_HOST: ${DB_HOST}
-    DB_PORT: ${DB_PORT}
-    DB_PASSWORD: ${DB_PASSWORD}
-    DB_USER: ${DB_USER}
-    DB_NAME: ${DB_NAME}
-    DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
-    DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
-    DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
-    ES_HOST: ${ES_HOST}
-    ES_PORT: ${ES_PORT}
-
+    <<: *admin-db-common-env
+    <<: *es-common-env
   volumes:
     - ./../dags:/opt/airflow/dags
     - af_logs:/opt/airflow/logs
@@ -71,16 +82,8 @@ services:
       - admin_static:/app/static
       - ./..:/app
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_USER: ${DB_USER}
-      DB_NAME: ${DB_NAME}
-      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD}
-      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME}
-      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL}
-      ES_HOST: ${ES_HOST}
-      ES_PORT: ${ES_PORT}
+      <<: *admin-db-common-env
+      <<: *es-common-env
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
       LOGGER_PATH: "/app/logs"
     depends_on:
