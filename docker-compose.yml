@@ -24,7 +24,7 @@ x-airflow-common:
   &airflow-common
   build:
     context: .
-    dockerfile: compose/airflow/Dockerfile
+    dockerfile: ./etc/compose/airflow/Dockerfile
     args:
       DEBUG: ${DEBUG}
   environment:
