@@ -41,7 +41,7 @@ x-airflow-common:
     <<: *es-common-env
   volumes:
     - ./src/airflow/dags:/opt/airflow/dags
-    - ./logs/airflow:/opt/airflow/logs
+    - ./app_data/logs/airflow:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
