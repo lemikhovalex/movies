@@ -54,7 +54,7 @@ x-airflow-common:
 services:
   admin_db:
     build:
-      context: ./admin_db
+      context: ./etc/compose/admin_db
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
