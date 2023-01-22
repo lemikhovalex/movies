@@ -43,7 +43,6 @@ x-airflow-common:
     - ./src/airflow/dags:/opt/airflow/dags
     - ./logs/airflow:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
-    - .:/srv/app
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
@@ -81,13 +80,13 @@ services:
       dockerfile: ./etc/compose/admin_panel/Dockerfile
       context: .
     volumes:
-      - admin_static:/app/static
+      - admin_static:/app/app_data/static
     environment:
       <<: *admin-db-common-env
       <<: *es-common-env
       SECRET_KEY: ${SECRET_KEY}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
-      LOGGER_PATH: "/app/logs"
+      LOGGER_PATH: "/app/app_data/logs"
     ports:
       - 8000:8000
     depends_on:
