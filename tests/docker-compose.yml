@@ -86,6 +86,8 @@ services:
       <<: *es-common-env
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
       LOGGER_PATH: "/app/logs"
+    ports:
+      - 8000:8000
     depends_on:
       - admin_db
       - elasticsearch
