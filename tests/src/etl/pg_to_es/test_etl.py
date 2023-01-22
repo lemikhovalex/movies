@@ -166,7 +166,7 @@ class FillESPlain(ABC):
 
     def test_fill_es_from_q(self, pg_conn, fw_queue: BaseUniqueStorage, es_factory):
         q_extracter = TargetExtracer(
-            pg_connection=pg_conn, u_storage=fw_queue, batch_size=512
+            pg_connection=pg_conn, u_storage=fw_queue, batch_size=256
         )
         transformer = PgToESTransformer()
         loader = Loader(index="movies", es_factory=es_factory, debug=True)

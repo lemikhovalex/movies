@@ -24,7 +24,7 @@ x-airflow-common:
   &airflow-common
   build:
     context: .
-    dockerfile: ./compose/airflow/Dockerfile
+    dockerfile: ./etc/compose/airflow/Dockerfile
     args:
       DEBUG: ${DEBUG}
   environment:
@@ -40,10 +40,9 @@ x-airflow-common:
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
-    - ./../dags:/opt/airflow/dags
-    - af_logs:/opt/airflow/logs
+    - ./src/airflow/dags:/opt/airflow/dags
+    - ./app_data/logs/airflow:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
-    - ./..:/srv/app
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
@@ -54,7 +53,7 @@ x-airflow-common:
 services:
   admin_db:
     build:
-      context: ./compose/admin_db
+      context: ./etc/compose/admin_db
     restart: always
     environment:
       DB_HOST: ${DB_HOST}
@@ -73,22 +72,27 @@ services:
       cluster.routing.allocation.disk.threshold_enabled: false
       xpack.security.enabled: false
       discovery.type: single-node
-      ES_JAVA_OPTS: -Xms1500m -Xmx1500m
+      ES_JAVA_OPTS: -Xms750m -Xmx750m
 
-  admin:
+  admin_panel:
     container_name: admin
-    build: .
+    build:
+      dockerfile: ./etc/compose/admin_panel/Dockerfile
+      context: .
     volumes:
-      - admin_static:/app/static
-      - .:/app
+      - admin_static:/app/app_data/static
     environment:
       <<: *admin-db-common-env
       <<: *es-common-env
+      SECRET_KEY: ${SECRET_KEY}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
-      LOGGER_PATH: "/app/logs"
+      LOGGER_PATH: "/app/app_data/logs"
+    ports:
+      - 8000:8000
     depends_on:
       - admin_db
       - elasticsearch
+    command: bash -c "sh start.sh"
 
   redis:
     image: redis:6-alpine
@@ -100,6 +104,34 @@ services:
       timeout: 30s
       retries: 50
     restart: always
+
+  af_db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: ${DB_AF_USER}
+      POSTGRES_PASSWORD: ${DB_AF_PASSWORD}
+      POSTGRES_DB: ${DB_AF_NAME}
+      POSTGRES_PORT: ${DB_AF_PORT}
+      PGDATA: "/var/lib/postgresql/data"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DB_AF_USER}",
+          "-d",
+          "${DB_AF_NAME}",
+          "-h",
+          "${DB_AF_HOST}",
+          "-p",
+          "${DB_AF_PORT}"
+        ]
+      interval: 5s
+      retries: 10
+    volumes:
+      - af_db_vol:/var/lib/postgresql/data
+    command: -p ${DB_AF_PORT}
 
   airflow-init:
     <<: *airflow-common

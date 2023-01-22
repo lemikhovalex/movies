@@ -11,7 +11,7 @@ from tests.src.utils.pg_utils import clean_pg
 
 @pytest.fixture(scope="session")
 def sqlite_conn() -> Generator[sqlite3.Connection, None, None]:
-    with sqlite3.connect("db.sqlite") as sqlite_conn:
+    with sqlite3.connect("tests/db.sqlite") as sqlite_conn:
         yield sqlite_conn
 
 

@@ -18,7 +18,7 @@ from etl.pg_to_es.extracters import (
 from etl.state import BaseUniqueStorage, GenericFileStorage, RedisQueue, State
 from tests.src.utils.pg_utils import clean_pg
 
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 
 
 @pytest.fixture(scope="class")

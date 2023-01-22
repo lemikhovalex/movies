@@ -17,16 +17,12 @@ COPY requirements.txt /
 EXPOSE 80/tcp
 RUN pip3 install -r requirements.txt --no-cache-dir
 
-COPY ./ app 
-COPY ./.env .app/.env 
-COPY ./start.sh /
+COPY ./src/admin_panel app/src/admin_panel 
+COPY ./etc/compose/admin_panel/start.sh /app/src/admin_panel/
 
-WORKDIR /app/
+WORKDIR /app/src/admin_panel/
 
 RUN chmod +x /wait
-RUN chmod +x /start.sh
-RUN chmod +x test.sh
+RUN chmod +x start.sh
 
-VOLUME /app
-RUN pip install -e .
-CMD /start.sh
+CMD start.sh
