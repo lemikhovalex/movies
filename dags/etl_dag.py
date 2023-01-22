@@ -11,7 +11,7 @@ with models.DAG(
 
     fill_fw_es = BashOperator(
         task_id=f"fill_es_fw_from_q",
-        bash_command=f"cd /srv/app/src/etl/ && python cli.py fill-es-from-q --queue=fw --batch-size=512",
+        bash_command=f"cd /srv/app/src/etl/ && python cli.py fill-es-from-q --queue=fw --batch-size=256",
         dag=dag,
     )
 
