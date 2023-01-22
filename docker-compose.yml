@@ -40,8 +40,8 @@ x-airflow-common:
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
-    - ./dags:/opt/airflow/dags
-    - af_logs:/opt/airflow/logs
+    - ./src/airflow/dags:/opt/airflow/dags
+    - ./logs/airflow:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
     - .:/srv/app
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
