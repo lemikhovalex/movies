@@ -37,6 +37,8 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:8080/airflow'
+    AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: 'true'
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
@@ -87,6 +89,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
       LOGGER_PATH: "/app/app_data/logs"
+    expose:
+      - 8000
     ports:
       - 8000:8000
     depends_on:
@@ -146,8 +150,8 @@ services:
   airflow-webserver:
     <<: *airflow-common
     command: webserver
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     healthcheck:
       test:
         [
@@ -171,6 +175,20 @@ services:
     <<: *airflow-common
     command: celery worker
     restart: always
+
+  nginx:
+    container_name: my_nginx
+    image: nginx:1.21.6
+    restart: always
+    volumes:
+      - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./src/nginx/conf.d:/etc/nginx/conf.d
+      - admin_static:/data/static
+    ports:
+      - 80:80
+    depends_on:
+      - admin_panel
+      - airflow-webserver
 
 volumes:
   admin_db_vol:
