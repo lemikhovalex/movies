@@ -1,5 +1,6 @@
 import datetime
 import time
+import urllib.parse
 from abc import ABC
 from http import HTTPStatus
 
@@ -180,15 +181,16 @@ class FillESPlain(ABC):
 
 class FillESAF(ABC):
     dag_run_id = f"test_run_{datetime.datetime.now().strftime('%d%m%Y%H%M%S')}"
+    air_flow_webserver = "http://airflow-webserver:8080/airflow/"
 
     def test_pg(self, request):
         request.getfixturevalue("pg_conn")
 
-    def test_enable_dag(
-        self,
-    ):
+    def test_enable_dag(self):
         resp = requests.patch(
-            "http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es",
+            urllib.parse.urljoin(
+                self.air_flow_webserver, "api/v1/dags/movies_etl_pg_to_es"
+            ),
             json={
                 "is_paused": False,
             },
@@ -199,7 +201,9 @@ class FillESAF(ABC):
 
     def test_dag(self, es_factory):
         resp = requests.post(
-            "http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es/dagRuns",
+            urllib.parse.urljoin(
+                self.air_flow_webserver, "api/v1/dags/movies_etl_pg_to_es/dagRuns"
+            ),
             json={
                 "dag_run_id": self.dag_run_id,
             },
@@ -214,7 +218,10 @@ class FillESAF(ABC):
         status = "no_q"
         while ((time.time() - s) < 30) and (not is_success):
             resp = requests.get(
-                f"http://airflow-webserver:8080/api/v1/dags/movies_etl_pg_to_es/dagRuns/{self.dag_run_id}",
+                urllib.parse.urljoin(
+                    self.air_flow_webserver,
+                    f"api/v1/dags/movies_etl_pg_to_es/dagRuns/{self.dag_run_id}",
+                ),
                 auth=HTTPBasicAuth("airflow", "airflow"),
             )
             assert resp.status_code == HTTPStatus.OK, self.dag_run_id + str(resp.json())

@@ -148,3 +148,5 @@ Loading complete
 /.idea
 static/
 *_state.json
+
+app_data/logs/airflow/

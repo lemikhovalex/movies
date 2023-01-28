@@ -4,21 +4,28 @@ This is a pet project based on Yandex-Practice course.
 The main idea is to create back-end services for online cinema.
 The project includes:
 - Admin panel
-- Endpoints for reading data
 - Transfering data from initial SQLite database
 - ETL from Postgres to Elastic Search
+- Endpoints for reading data fast, from Elastic search
 
 ## To start up
 Prefered way with docker compose
-Start wth moving example `.env.sample` to `.env`.
-
-Visit repo with common services to raise all the stack [with this link](https://github.com/lemikhovalex/movies_common_services)
-and follow instructions
+Start wth moving example `sample.env` to `.env`.
 
 `docker-compose up -d --build`
 
 To transfer data from SQLire to production database run inside container
 
-`cd /app/sqlite_to_postgres && python3 load_data.py`
+The admin panel can be found at `http://127.0.0.1/admin/`. Default creadentials can be found in .env. Feel free to check `admin`, `123qwe` first
 
-Finally you will end get admin panel with data in it.
+The air flow webserver at `http://127.0.0.1/admin/`. Default credentials are `airflow`, `airflow`
+
+To run ETL from sqlite to Postgres go to airflow worker container and
+- `cd /srv/app/`
+- `python`
+- `from etl.sqlite_to_postgres import main`
+- `main()`
+
+After that you can observe data in admin panel
+
+To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airflow/dags/movies_etl_pg_to_es`
