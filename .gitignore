@@ -139,7 +139,6 @@ Status
 Docs
 Contact GitHub
 Pricing
-API
 Training
 Blog
 About
@@ -150,3 +149,5 @@ static/
 *_state.json
 
 app_data/logs/airflow/
+
+*.DS_Store
