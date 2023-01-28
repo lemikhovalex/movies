@@ -23,22 +23,22 @@ class Loader(ILoader):
         self, index: str, es_factory: Callable[[], Elasticsearch], debug: bool = False
     ):
         self.es_conn_factory = es_factory
+        self.es_conn = self.es_conn_factory()
         self.index = index
         self.debug = debug
 
     def load(self, data_to_load: List[ToES]):
         actions = []
 
-        with self.es_conn_factory() as es_conn:
-            for datum in data_to_load:
-                to_app = json.loads(datum.json())
-                to_app["_id"] = datum.id
-                actions.append(to_app)
-            # if we dont match index we shall not wait, we better write
-            try:
-                helpers.bulk(es_conn, actions, index=self.index, refresh=self.debug)
-            except helpers.BulkIndexError as excep:
-                process_exception(excep, logger)
+        for datum in data_to_load:
+            to_app = json.loads(datum.json())
+            to_app["_id"] = datum.id
+            actions.append(to_app)
+        # if we dont match index we shall not wait, we better write
+        try:
+            helpers.bulk(self.es_conn, actions, index=self.index, refresh=self.debug)
+        except helpers.BulkIndexError as excep:
+            process_exception(excep, logger)
 
     def save_state(self):
         pass
