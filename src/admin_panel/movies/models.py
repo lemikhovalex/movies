@@ -67,9 +67,7 @@ class Genre(TimeStampedMixin, UUIDMixin):
         # Следующие два поля отвечают за название модели в интерфейсе
         verbose_name = "жанр"
         verbose_name_plural = "жанры"
-        constraints = [
-            models.UniqueConstraint(fields=["name"], name="uniq genre name")
-        ]
+        constraints = [models.UniqueConstraint(fields=["name"], name="uniq genre name")]
 
     def __str__(self):
         return self.name

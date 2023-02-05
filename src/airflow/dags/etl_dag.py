@@ -1,6 +1,7 @@
-from airflow import models
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
+
+from airflow import models
 
 with models.DAG(
     dag_id="movies_etl_pg_to_es",
@@ -10,8 +11,9 @@ with models.DAG(
 ) as dag:
 
     fill_fw_es = BashOperator(
-        task_id=f"fill_es_fw_from_q",
-        bash_command=f"cd /srv/app/src/etl/ && python cli.py fill-es-from-q --queue=fw --batch-size=256",
+        task_id="fill_es_fw_from_q",
+        bash_command="""cd /srv/app/src/etl/ && python cli.py fill-es-from-q
+        --queue=fw --batch-size=256""",
         dag=dag,
     )
 
@@ -38,7 +40,8 @@ with models.DAG(
                 bash_command=" ".join(
                     [
                         "cd /srv/app/src/etl/ && python cli.py fill-q-from-q",
-                        f"--extracter=FilmworkExtracter --batch-size={batch_size} --source-queue={queue_name} --target-queue=fw",
+                        """--extracter=FilmworkExtracter --batch-size={batch_size}
+                        --source-queue={queue_name} --target-queue=fw""",
                     ]
                 ),
                 dag=dag,
