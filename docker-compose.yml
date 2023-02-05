@@ -96,7 +96,7 @@ services:
     depends_on:
       - admin_db
       - elasticsearch
-    command: bash -c "sh start.sh"
+    command: bash -c "sh /start.sh"
 
   redis:
     image: redis:6-alpine

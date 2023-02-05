@@ -18,11 +18,9 @@ EXPOSE 80/tcp
 RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY ./src/admin_panel /app/src/admin_panel 
-COPY ./etc/compose/admin_panel/start.sh /app/src/admin_panel/
+COPY ./etc/compose/admin_panel/start.sh /
 
 WORKDIR /app/src/admin_panel/
 
 RUN chmod +x /wait
-RUN chmod +x start.sh
-
-CMD start.sh
+RUN chmod +x /start.sh
