@@ -20,7 +20,14 @@ USER airflow
 RUN pip install -r /srv/app/requirements.txt --no-cache-dir
 
 USER root
-COPY . /srv/app/
+
+COPY ./src/airflow/ /srv/app/src/airflow/
+COPY ./src/etl/ /srv/app/src/etl/
+COPY ./tests/ /srv/app/tests/
+
+COPY ./setup.cfg /srv/app/
+COPY ./setup.py /srv/app/
+
 RUN chown -R airflow /srv/app/
 USER airflow
 
