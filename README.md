@@ -18,7 +18,7 @@ To transfer data from SQLire to production database run inside container
 
 The admin panel can be found at `http://127.0.0.1/admin/`. Default creadentials can be found in .env. Feel free to check `admin`, `123qwe` first
 
-The air flow webserver at `http://127.0.0.1/admin/`. Default credentials are `airflow`, `airflow`
+The air flow webserver at `http://127.0.0.1/airflow/`. Default credentials are `airflow`, `airflow`
 
 To run ETL from sqlite to Postgres go to airflow worker container and
 - `cd /srv/app/`
