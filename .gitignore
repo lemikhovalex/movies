@@ -151,3 +151,4 @@ static/
 app_data/logs/airflow/
 
 *.DS_Store
+docker-compose.override.yml

@@ -1,0 +1,19 @@
+version: '3.9'
+
+x-airflow-common:
+  restart: "no"
+  volumes:
+    - ./src/etl:/srv/app/src/etl
+    - ./src/airflow:/srv/app/src/airflow
+    - ./tests:/srv/app/tests
+
+services:
+  admin_panel:
+    volumes:
+      - ./src/admin_panel:/app/src/admin_panel
+  admin_db:
+    restart: "no"
+  redis:
+    restart: "no"
+  nginx:
+    restart: "no"
