@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-dev \
     pkg-config
 
-COPY requirements.txt /srv/app/
+COPY ./etc/compose/airflow/requirements.txt /srv/app/
 RUN chown -R airflow /srv/app/
 
 USER airflow
@@ -24,6 +24,7 @@ USER root
 COPY ./src/airflow/ /srv/app/src/airflow/
 COPY ./src/etl/ /srv/app/src/etl/
 COPY ./tests/ /srv/app/tests/
+COPY ./test.sh /srv/app/
 
 COPY ./setup.cfg /srv/app/
 COPY ./setup.py /srv/app/
