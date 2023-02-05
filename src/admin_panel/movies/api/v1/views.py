@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
+
 from movies.models import Filmwork
 
 FILMWORK_FIELDS_OF_INTEREST = [
@@ -81,6 +82,4 @@ class MoviesListApi(MoviesApiMixin, BaseListView):
 
 class MoviesDetailApi(MoviesApiMixin, BaseDetailView):
     def get_context_data(self, **kwargs):
-        return super(MoviesDetailApi, self).get_context_data(**kwargs)[
-            "object"
-        ]
+        return super(MoviesDetailApi, self).get_context_data(**kwargs)["object"]
