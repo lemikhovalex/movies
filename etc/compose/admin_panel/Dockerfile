@@ -17,7 +17,7 @@ COPY ./etc/compose/admin_panel/requirements.txt /
 EXPOSE 80/tcp
 RUN pip3 install -r requirements.txt --no-cache-dir
 
-COPY ./src/admin_panel app/src/admin_panel 
+COPY ./src/admin_panel /app/src/admin_panel 
 COPY ./etc/compose/admin_panel/start.sh /app/src/admin_panel/
 
 WORKDIR /app/src/admin_panel/
