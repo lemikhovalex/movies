@@ -40,6 +40,12 @@ For local development and typing support it's reccomended to install all package
 
 `pip install -r requirements-dev.txt -r etc/compose/admin_panel/requirements.txt  -r etc/compose/airflow/requirements.txt`
 
+### Hooks
+Install hoks with flake8, isort and black to maintain codestyle
+
+`pre-commit install`
+
+
 ### Docker
 There is dedicated `sample.docker-compose.override.yml` file to separate production from development.
 For the ease of development there is an opption to mount directories with code and edit code inside container.
