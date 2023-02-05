@@ -9,18 +9,18 @@ The project includes:
 - Endpoints for reading data fast, from Elastic search
 
 ## To start up
+### Requirements
+For local development and typing support it's reccomended to install all packages for all images as follows:
+
+`pip install -r *requirements*.txt`
+
+### Docker
 Prefered way with docker compose
 Start wth moving example `sample.env` to `.env`.
 
 `docker-compose up -d --build`
-
-To transfer data from SQLire to production database run inside container
-
-The admin panel can be found at `http://127.0.0.1/admin/`. Default creadentials can be found in .env. Feel free to check `admin`, `123qwe` first
-
-The air flow webserver at `http://127.0.0.1/airflow/`. Default credentials are `airflow`, `airflow`
-
-To run ETL from sqlite to Postgres go to airflow worker container and
+### Add some data
+To to add some data go to airflow worker container and
 - `cd /srv/app/`
 - `python`
 - `from etl.sqlite_to_postgres import main`
@@ -28,4 +28,18 @@ To run ETL from sqlite to Postgres go to airflow worker container and
 
 After that you can observe data in admin panel
 
+## Check some pages in browser
+
+The admin panel can be found at `http://127.0.0.1/admin/`. Default creadentials can be found in .env. Feel free to check `admin`, `123qwe` first
+
+The air flow webserver at `http://127.0.0.1/airflow/`. Default credentials are `airflow`, `airflow`
+
+
 To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airflow/dags/movies_etl_pg_to_es`
+
+
+## Run tests
+
+Go to `airflow-worker` container and
+- `cd /srv/app/`
+- `sh test.sh`
