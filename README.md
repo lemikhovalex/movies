@@ -38,7 +38,7 @@ To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airfl
 ### Requirements
 For local development and typing support it's reccomended to install all packages for all images as follows:
 
-`pip install -r *requirements*.txt`
+`pip install -r requirements-dev.txt -r etc/compose/admin_panel/requirements.txt  -r etc/compose/airflow/requirements.txt`
 
 ### Docker
 There is dedicated `sample.docker-compose.override.yml` file to separate production from development.
