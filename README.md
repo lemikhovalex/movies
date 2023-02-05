@@ -9,10 +9,6 @@ The project includes:
 - Endpoints for reading data fast, from Elastic search
 
 ## To start up
-### Requirements
-For local development and typing support it's reccomended to install all packages for all images as follows:
-
-`pip install -r *requirements*.txt`
 
 ### Docker
 Prefered way with docker compose
@@ -38,7 +34,22 @@ The air flow webserver at `http://127.0.0.1/airflow/`. Default credentials are `
 To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airflow/dags/movies_etl_pg_to_es`
 
 
-## Run tests
+## To develop
+### Requirements
+For local development and typing support it's reccomended to install all packages for all images as follows:
+
+`pip install -r *requirements*.txt`
+
+### Docker
+There is dedicated `sample.docker-compose.override.yml` file to separate production from development.
+For the ease of development there is an opption to mount directories with code and edit code inside container.
+To enable it jsut
+- `cp sample.docker-compose.override.yml docker-compose.override.yml`
+- `docekr-compose up -d`
+
+And you changes will appear in containers
+
+### Run tests
 
 Go to `airflow-worker` container and
 - `cd /srv/app/`
