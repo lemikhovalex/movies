@@ -6,6 +6,7 @@ import pytest
 import redis
 from elasticsearch import Elasticsearch
 from psycopg2.extras import DictCursor
+from src.utils.pg_utils import clean_pg
 
 from etl import constants, sqlite_to_postgres
 from etl.config import CONFIG
@@ -16,7 +17,6 @@ from etl.pg_to_es.extracters import (
     PersonExtracter,
 )
 from etl.state import BaseUniqueStorage, GenericFileStorage, RedisQueue, State
-from tests.src.utils.pg_utils import clean_pg
 
 BATCH_SIZE = 256
 

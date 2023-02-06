@@ -30,6 +30,8 @@ The admin panel can be found at `http://127.0.0.1/admin/`. Default creadentials 
 
 The air flow webserver at `http://127.0.0.1/airflow/`. Default credentials are `airflow`, `airflow`
 
+The OpenApi can be found at `http://127.0.0.1/api/openapi`
+
 
 To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airflow/dags/movies_etl_pg_to_es`
 
@@ -38,7 +40,12 @@ To run ETL from Postgres to Elsatic search trigger graph `http://127.0.0.1/airfl
 ### Requirements
 For local development and typing support it's reccomended to install all packages for all images as follows:
 
-`pip install -r requirements-dev.txt -r etc/compose/admin_panel/requirements.txt  -r etc/compose/airflow/requirements.txt`
+```
+pip install -r requirements-dev.txt \
+    -r etc/compose/admin_panel/requirements.txt \
+    -r etc/compose/airflow/requirements.txt \
+    -r etc/compose/movies_api/requirements.txt
+```
 
 ### Hooks
 Install hoks with flake8, isort and black to maintain codestyle
@@ -56,7 +63,13 @@ To enable it jsut
 And you changes will appear in containers
 
 ### Run tests
-
+#### ETL
 Go to `airflow-worker` container and
 - `cd /srv/app/`
 - `sh test.sh`
+
+#### API
+
+Go to api container and run
+- `cd /app/tests/api`
+- `pytest src`

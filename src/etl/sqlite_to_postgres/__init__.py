@@ -35,7 +35,7 @@ def main(
         close_pg_conn = True
 
     if sqlite_conn is None:
-        sqlite_conn = sqlite3.connect("tests/db.sqlite")
+        sqlite_conn = sqlite3.connect("tests/etl/db.sqlite")
         close_sqlite_conn = True
 
     down_loader = SQLiteDownLoader(connect=sqlite_conn)

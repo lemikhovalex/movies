@@ -89,14 +89,18 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
       LOGGER_PATH: "/app/app_data/logs"
-    expose:
-      - 8000
-    ports:
-      - 8000:8000
     depends_on:
       - admin_db
       - elasticsearch
     command: bash -c "sh /start.sh"
+
+  movies_api:
+    container_name: movies_api
+    build:
+      dockerfile: ./etc/compose/movies_api/Dockerfile
+      context: .
+    environment:
+      - GUNICORN_CMD_ARGS
 
   redis:
     image: redis:6-alpine
@@ -189,6 +193,7 @@ services:
     depends_on:
       - admin_panel
       - airflow-webserver
+      - movies_api
 
 volumes:
   admin_db_vol:

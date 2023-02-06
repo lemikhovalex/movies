@@ -1,9 +1,9 @@
 import psycopg2
 import pytest
 from psycopg2.extras import DictCursor
+from src.utils.pg_utils import clean_pg
 
 from etl.config import CONFIG
-from tests.src.utils.pg_utils import clean_pg
 
 
 @pytest.fixture(scope="session")
