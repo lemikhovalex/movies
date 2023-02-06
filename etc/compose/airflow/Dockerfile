@@ -23,8 +23,8 @@ USER root
 
 COPY ./src/airflow/ /srv/app/src/airflow/
 COPY ./src/etl/ /srv/app/src/etl/
-COPY ./tests/ /srv/app/tests/
-COPY ./test.sh /srv/app/
+COPY ./tests/etl/ /srv/app/tests/etl/
+COPY ./tests/etl/test.sh /srv/app/
 
 COPY ./setup.cfg /srv/app/
 COPY ./setup.py /srv/app/
