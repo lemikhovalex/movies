@@ -11,9 +11,24 @@ services:
   admin_panel:
     volumes:
       - ./src/admin_panel:/app/src/admin_panel
+    ports:
+      - 8000:8000
+
   admin_db:
     restart: "no"
+
   redis:
     restart: "no"
+
   nginx:
     restart: "no"
+
+  movies_api:
+    environment:
+      UVICORN_RELOAD: 1
+      DEBUG: 1
+    ports:
+      - '8001:8001'
+    volumes:
+      - ./src/movies_api/:/app/
+    command: python main.py
