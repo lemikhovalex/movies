@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 
 COPY ./etc/compose/admin_panel/requirements.txt /
-EXPOSE 80/tcp
 RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY ./src/admin_panel /app/src/admin_panel 
