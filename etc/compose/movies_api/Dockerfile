@@ -10,8 +10,9 @@ COPY ./etc/compose/movies_api/requirements.txt /
 RUN pip install --upgrade pip
 RUN pip3 install -r /requirements.txt --no-cache-dir
 
-COPY ./src/movies_api/ /app/
+COPY ./src/movies_api/ /app/src/
+COPY ./tests/api/ /app/tests/api/
 
-WORKDIR /app/
+WORKDIR /app/src/
 
 CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "main:app"]
