@@ -11,7 +11,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     # psycopg2 dependencies
     libpq-dev \
     python3-dev \
-    pkg-config
+    pkg-config \
+    openjdk-11-jdk -y \
+    wget -y
 
 COPY ./etc/compose/airflow/requirements.txt /srv/app/
 RUN chown -R airflow /srv/app/
@@ -20,6 +22,10 @@ USER airflow
 RUN pip install -r /srv/app/requirements.txt --no-cache-dir
 
 USER root
+RUN cd / && mkdir app_data && cd /app_data && mkdir spark && cd spark && mkdir drivers
+RUN cd /app_data/spark/drivers/ && curl -O https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.34.0/sqlite-jdbc-3.34.0.jar
+
+
 
 COPY ./src/airflow/ /srv/app/src/airflow/
 COPY ./src/etl/ /srv/app/src/etl/
@@ -29,8 +35,10 @@ COPY ./tests/etl/test.sh /srv/app/
 COPY ./setup.cfg /srv/app/
 COPY ./setup.py /srv/app/
 
-RUN chown -R airflow /srv/app/
+RUN chown -R airflow /srv/app/src
 USER airflow
 
 ARG DEBUG
 RUN pip install -e /srv/app/
+
+
