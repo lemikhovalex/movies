@@ -22,9 +22,10 @@ USER airflow
 RUN pip install -r /srv/app/requirements.txt --no-cache-dir
 
 USER root
-RUN cd / && mkdir app_data && cd /app_data && mkdir spark && cd spark && mkdir drivers
-RUN cd /app_data/spark/drivers/ && curl -O https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.34.0/sqlite-jdbc-3.34.0.jar
-RUN cd /app_data/spark/drivers/ && curl -O https://jdbc.postgresql.org/download/postgresql-42.2.6.jar
+RUN cd /opt && mkdir workspace 
+
+RUN cd /opt/workspace/ && curl -O https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.34.0/sqlite-jdbc-3.34.0.jar
+RUN cd /opt/workspace/ && curl -O https://jdbc.postgresql.org/download/postgresql-42.5.1.jar
 
 COPY ./src/airflow/ /srv/app/src/airflow/
 COPY ./src/etl/ /srv/app/src/etl/
@@ -39,5 +40,3 @@ USER airflow
 
 ARG DEBUG
 RUN pip install -e /srv/app/
-
-
