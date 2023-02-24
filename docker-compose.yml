@@ -37,7 +37,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
-    AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:8080/airflow'
+    AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:${AF_PORT}/airflow'
     AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: 'true'
     <<: *admin-db-common-env
     <<: *es-common-env
@@ -88,6 +88,7 @@ services:
     environment:
       <<: *admin-db-common-env
       <<: *es-common-env
+      ADMIN_PORT: ${ADMIN_PORT}
       SECRET_KEY: ${SECRET_KEY}
       WAIT_HOSTS: ${DB_HOST}:${DB_PORT}, ${ES_HOST}:${ES_PORT}
       LOGGER_PATH: "/app/app_data/logs"
@@ -157,14 +158,14 @@ services:
     <<: *airflow-common
     command: webserver
     expose:
-      - 8080
+      - ${AF_PORT}
     healthcheck:
       test:
         [
           "CMD",
           "curl",
           "--fail",
-          "http://localhost:8080/airflow/health"
+          "http://localhost:${AF_PORT}/airflow/health"
         ]
       interval: 5s
       timeout: 10s
@@ -190,6 +191,9 @@ services:
       - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./src/nginx/conf.d:/etc/nginx/conf.d
       - admin_static:/data/static
+    environment:
+      ADMIN_PORT: ${ADMIN_PORT}
+      AF_PORT: ${AF_PORT}
     ports:
       - 80:80
     depends_on:

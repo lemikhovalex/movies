@@ -7,6 +7,6 @@ class TestSettings(BaseSettings):
     redis_host: str = Field("redis", env="REDIS_HOST")
     redis_port: int = Field(6379, env="REDIS_PORT")
     api_host: str = Field("movies_api", env="API_HOST")
-    api_port: int = Field(8001, env="API_PORT")
+    api_port: int = Field(8001, env="MOVIES_API_PORT")
     service_wait_timeout: int = Field(30, env="SERVICE_WAIT_TIMEOUT")  # seconds
     service_wait_interval: int = Field(1, env="SERVICE_WAIT_INTERVAL")  # seconds

@@ -12,7 +12,7 @@ services:
     volumes:
       - ./src/admin_panel:/app/src/admin_panel
     ports:
-      - 8000:8000
+      - ${ADMIN_PORT}:${ADMIN_PORT}
 
   admin_db:
     restart: "no"
@@ -28,7 +28,7 @@ services:
       UVICORN_RELOAD: 1
       DEBUG: 1
     ports:
-      - '8001:8001'
+      - ${MOVIES_API_PORT}:${MOVIES_API_PORT}
     volumes:
       - ./src/movies_api/:/app/
     command: python main.py
