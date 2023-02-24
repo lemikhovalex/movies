@@ -26,6 +26,7 @@ RUN cd /opt && mkdir workspace
 
 RUN cd /opt/workspace/ && curl -O https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.34.0/sqlite-jdbc-3.34.0.jar
 RUN cd /opt/workspace/ && curl -O https://jdbc.postgresql.org/download/postgresql-42.5.1.jar
+RUN cd /opt/workspace/ && curl -O https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.10/7.17.9/elasticsearch-spark-20_2.10-7.17.9.jar
 
 COPY ./src/airflow/ /srv/app/src/airflow/
 COPY ./src/etl/ /srv/app/src/etl/
