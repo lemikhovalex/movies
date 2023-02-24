@@ -9,15 +9,9 @@ spark_session = (
     .config("spark.driver.memory", "4g")
     .config("spark.executor.memory", "2g")
     .config("spark.driver.maxResultSize", "1g")
-    .config("spark.driver.extraClassPath", f"{SPARK_DIR}/postgresql-42.5.1.jar")
     .config(
-        "spark.yarn.dist.jars",
-        ",".join(
-            [
-                f"{SPARK_DIR}/postgresql-42.5.1.jar",
-                f"{SPARK_DIR}/elasticsearch-spark-20_2.10-7.17.9.jar",
-            ]
-        ),
+        "spark.jars.packages",
+        "org.apache.hadoop:hadoop-aws:3.2.2,org.postgresql:postgresql:42.2.10,org.elasticsearch:elasticsearch-spark-30_2.12:7.12.1",
     )
     .getOrCreate()
 )

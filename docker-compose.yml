@@ -39,12 +39,14 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:${AF_PORT}/airflow'
     AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: 'true'
+    AF_PORT: ${AF_PORT}
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
     - ./src/airflow/dags:/opt/airflow/dags
     - af_logs:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
+    - ./tests:/srv/app/tests
     # - ./app_data/spark:/usr/local/spark/app # Spark scripts folder (Must be the same path in airflow and Spark Cluster)
     # - ./app_data/spark/resources:/usr/local/spark/resources #Resources folder (Must be the same path in airflow and Spark Cluster)
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
@@ -71,7 +73,7 @@ services:
     command: -p ${DB_PORT}
 
   elasticsearch:
-    image: elasticsearch:8.0.0
+    image: elasticsearch:8.6.2
     environment:
       cluster.routing.allocation.disk.threshold_enabled: false
       xpack.security.enabled: false
@@ -195,7 +197,7 @@ services:
       ADMIN_PORT: ${ADMIN_PORT}
       AF_PORT: ${AF_PORT}
     ports:
-      - 80:80
+      - 70:70
     depends_on:
       - admin_panel
       - airflow-webserver
