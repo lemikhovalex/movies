@@ -43,10 +43,10 @@ x-airflow-common:
     <<: *es-common-env
   volumes:
     - ./src/airflow/dags:/opt/airflow/dags
-    - ./app_data/logs/airflow:/opt/airflow/logs
+    - af_logs:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
-    - ./app_data/spark:/usr/local/spark/app # Spark scripts folder (Must be the same path in airflow and Spark Cluster)
-    - ./app_data/spark/resources:/usr/local/spark/resources #Resources folder (Must be the same path in airflow and Spark Cluster)
+    # - ./app_data/spark:/usr/local/spark/app # Spark scripts folder (Must be the same path in airflow and Spark Cluster)
+    # - ./app_data/spark/resources:/usr/local/spark/resources #Resources folder (Must be the same path in airflow and Spark Cluster)
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
@@ -210,6 +210,7 @@ services:
       - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}
       - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT}
     command: "/start-master.sh"
+
   spark-worker:
     build:
       context: .
