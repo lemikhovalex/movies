@@ -3,8 +3,8 @@
 # Start the first process
 
 /wait \
-    && python manage.py collectstatic --noinput \
-    && python manage.py migrate \
+    ; python manage.py collectstatic --noinput \
+    ; python manage.py migrate \
 
 python manage.py createsuperuser --noinput || echo "SU creation failed"
 
