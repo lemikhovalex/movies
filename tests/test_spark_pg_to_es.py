@@ -3,16 +3,17 @@ from collections import OrderedDict
 from pyspark.sql import SparkSession
 
 SPARK_DIR = "/opt/workspace"
-
+spark_jars = [
+    "org.apache.hadoop:hadoop-aws:3.2.1",
+    "org.postgresql:postgresql:42.2.10",
+    "org.elasticsearch:elasticsearch-spark-30_2.13:8.6.2",
+]
 spark_session = (
     SparkSession.builder.appName("Python Spark SQL basic example")
     .config("spark.driver.memory", "4g")
     .config("spark.executor.memory", "2g")
     .config("spark.driver.maxResultSize", "1g")
-    .config(
-        "spark.jars.packages",
-        "org.apache.hadoop:hadoop-aws:3.2.2,org.postgresql:postgresql:42.2.10,org.elasticsearch:elasticsearch-spark-30_2.12:7.12.1",
-    )
+    .config("spark.jars.packages", ",".join(spark_jars))
     .getOrCreate()
 )
 query = """
