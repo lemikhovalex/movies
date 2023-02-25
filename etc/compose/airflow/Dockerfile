@@ -12,8 +12,12 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libpq-dev \
     python3-dev \
     pkg-config \
-    openjdk-11-jdk -y \
-    wget -y
+    wget \
+    software-properties-common
+RUN apt-get update \
+    && apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' \
+    && apt-get update \
+    && apt-get install openjdk-8-jdk -y
 
 COPY ./etc/compose/airflow/requirements.txt /srv/app/
 RUN chown -R airflow /srv/app/
