@@ -6,7 +6,7 @@ SPARK_DIR = "/opt/workspace"
 spark_jars = [
     "org.apache.hadoop:hadoop-aws:3.2.1",
     "org.postgresql:postgresql:42.2.10",
-    "org.elasticsearch:elasticsearch-spark-30_2.13:8.6.2",
+    "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
 ]
 spark_session = (
     SparkSession.builder.appName("Python Spark SQL basic example")
@@ -108,7 +108,7 @@ options["es.batch.write.retry.wait"] = "60"
 options["es.batch.size.bytes"] = "2mb"
 options["es.batch.size.entries"] = "128"
 
-# elasticsearch-spark-20_2.10-7.17.9.jar
+# # elasticsearch-spark-20_2.10-7.17.9.jar
 _ = (
     dbDataFrame.write.format("org.elasticsearch.spark.sql")
     .options(**options)
