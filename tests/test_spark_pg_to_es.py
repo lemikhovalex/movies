@@ -9,7 +9,8 @@ spark_jars = [
     "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
 ]
 spark_session = (
-    SparkSession.builder.appName("Python Spark SQL basic example")
+    SparkSession.builder.master("spark://spark-master:7077")
+    .appName("Python Spark SQL basic example")
     .config("spark.driver.memory", "4g")
     .config("spark.executor.memory", "2g")
     .config("spark.driver.maxResultSize", "1g")
@@ -88,7 +89,7 @@ dbDataFrame = (
 print(2)
 dbDataFrame = dbDataFrame.load()
 print(3)
-dbDataFrame.show(5)
+# dbDataFrame.show(5)
 print(4)
 
 # Write the result into ES
