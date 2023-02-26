@@ -12,6 +12,11 @@ class Config(BaseSettings):
     db_user: str
     db_name: str
     db_password: str
+
+    spark_master_host: str
+    spark_master_port: int
+
+    af_port: int
     redis_port: int = 6379
     redis_host: str = "redis"
     logger_path: Optional[str] = None

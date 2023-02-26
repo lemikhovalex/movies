@@ -22,4 +22,4 @@ IS_DEBUG = bool(os.getenv("DEBUG", 0))
 MAX_ES_SEARCH_FROM_SIZE = 5 if IS_DEBUG else 10_000
 REDIS_CACHE_EXPIRE = 60
 
-PORT = int(os.getenv("PORT", 8001))
+PORT = int(os.getenv("MOVIES_API_PORT", 8001))
