@@ -13,6 +13,9 @@ class Config(BaseSettings):
     db_name: str
     db_password: str
 
+    spark_master_host: str
+    spark_master_port: int
+
     af_port: int
     redis_port: int = 6379
     redis_host: str = "redis"

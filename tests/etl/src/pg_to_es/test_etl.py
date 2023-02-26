@@ -13,6 +13,7 @@ from pyspark.sql.functions import from_json
 from pyspark.sql.types import ArrayType, MapType, StringType
 from requests.auth import HTTPBasicAuth
 
+from etl.config import CONFIG
 from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
 from etl.pg_to_es.loaders import Loader
 from etl.pg_to_es.pipelines import MoviesETL
@@ -220,7 +221,7 @@ class FillESAF(ABC):
         s = time.time()
         is_success: bool = False
         status = "no_q"
-        while ((time.time() - s) < 30) and (not is_success):
+        while ((time.time() - s) < 60) and (not is_success):
             resp = requests.get(
                 urllib.parse.urljoin(
                     self.air_flow_webserver,
@@ -247,10 +248,14 @@ class FillESSpark(ABC):
             "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
         ]
         spark_session = (
-            SparkSession.builder.master("spark://spark-master:7077")
+            SparkSession.builder.master(
+                "spark://{host}:{port}".format(
+                    port=CONFIG.spark_master_port, host=CONFIG.spark_master_host
+                )
+            )
             .appName("Python Spark SQL basic example")
-            .config("spark.driver.memory", "4g")
-            .config("spark.executor.memory", "2g")
+            .config("spark.driver.memory", "1g")
+            .config("spark.executor.memory", "1g")
             .config("spark.driver.maxResultSize", "1g")
             .config("spark.jars.packages", ",".join(spark_jars))
             .getOrCreate()
@@ -310,7 +315,7 @@ class FillESSpark(ABC):
                         'id', g.id,
                         'name', g.name
                     )
-                ) FILTER (WHERE p_fw.role = 'director' and p.id is not NULL),
+                ) FILTER (WHERE g.id is not NULL),
                 '[]'
             ) as genres
             from content.film_work as fw
@@ -323,10 +328,12 @@ class FillESSpark(ABC):
 
         dbDataFrame = (
             spark_session.read.format("jdbc")
-            .option("url", "jdbc:postgresql://admin_db:15432/movies")
+            .option(
+                "url", f"jdbc:postgresql://{CONFIG.db_host}:{CONFIG.db_port}/movies"
+            )
             .option("driver", "org.postgresql.Driver")
-            .option("user", "app")
-            .option("password", "app")
+            .option("user", CONFIG.db_user)
+            .option("password", CONFIG.db_password)
             .option(
                 "query",
                 query,
@@ -355,13 +362,11 @@ class FillESSpark(ABC):
                     ArrayType(StringType()),
                 ),
             )
-        dbDataFrame.show(5)
-        print(4)
 
         # Write the result into ES
         options = OrderedDict()
-        options["es.nodes"] = "elasticsearch"
-        options["es.port"] = "9200"
+        options["es.nodes"] = CONFIG.es_host
+        options["es.port"] = str(CONFIG.es_port)
         options["es.Resource"] = "movies"
         # Connect the timeout time setting of the ES. Default 1M
         options["es.http.timeout"] = "10000m"
@@ -373,16 +378,18 @@ class FillESSpark(ABC):
         # The following parameters can control the amount and number
         # of data quantities and
         # numbers written in a single batch (two choices)
-        options["es.batch.size.bytes"] = "2mb"
-        options["es.batch.size.entries"] = "128"
+        options["es.batch.size.bytes"] = "1mb"
+        options["es.batch.size.entries"] = "64"
+        options["es.batch.write.refresh"] = "true"
 
         # # elasticsearch-spark-20_2.10-7.17.9.jar
         _ = (
             dbDataFrame.write.format("org.elasticsearch.spark.sql")
             .options(**options)
-            .mode("overwrite")
+            .mode("append")
             .save()
         )
+        time.sleep(5)
 
 
 class TestPlainPgToES(BaseTests, FillESPlain):
