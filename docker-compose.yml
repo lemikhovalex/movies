@@ -40,6 +40,8 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:${AF_PORT}/airflow'
     AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: 'true'
     AF_PORT: ${AF_PORT}
+    SPARK_MASTER_HOST: ${SPARK_MASTER_HOST}
+    SPARK_MASTER_PORT: ${SPARK_MASTER_PORT}
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
@@ -47,8 +49,7 @@ x-airflow-common:
     - af_logs:/opt/airflow/logs
     - af_plugins:/opt/airflow/plugins
     - ./tests:/srv/app/tests
-    # - ./app_data/spark:/usr/local/spark/app # Spark scripts folder (Must be the same path in airflow and Spark Cluster)
-    # - ./app_data/spark/resources:/usr/local/spark/resources #Resources folder (Must be the same path in airflow and Spark Cluster)
+    - ./src/etl:/srv/app/src/etl
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     redis:
