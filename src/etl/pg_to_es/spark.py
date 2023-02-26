@@ -3,6 +3,25 @@ from pyspark.sql.functions import from_json
 from pyspark.sql.types import ArrayType, MapType, StringType
 
 
+def get_postgres_es_session(
+    master_host: str, master_port: int, app_name: str
+) -> SparkSession:
+    spark_jars = [
+        "org.postgresql:postgresql:42.2.10",
+        "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
+    ]
+    spark_session = (
+        SparkSession.builder.master(f"spark://{master_host}:{master_port}")
+        .appName(app_name)
+        .config("spark.driver.memory", "1g")
+        .config("spark.executor.memory", "1g")
+        .config("spark.driver.maxResultSize", "1g")
+        .config("spark.jars.packages", ",".join(spark_jars))
+        .getOrCreate()
+    )
+    return spark_session
+
+
 class PostgreExtractor:
     def __init__(
         self,

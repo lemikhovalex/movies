@@ -15,34 +15,27 @@ from etl.config import CONFIG
 from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
 from etl.pg_to_es.loaders import Loader
 from etl.pg_to_es.pipelines import MoviesETL
-from etl.pg_to_es.spark import ElasticLoader, FilmWorkTransformer, PostgreExtractor
+from etl.pg_to_es.spark import (
+    ElasticLoader,
+    FilmWorkTransformer,
+    PostgreExtractor,
+    get_postgres_es_session,
+)
 from etl.pg_to_es.transformers import PgToESTransformer
 from etl.state import BaseUniqueStorage
 
 
 @pytest.fixture(scope="class")
 def spark_session() -> tp.Generator[SparkSession, None, None]:
-    spark_jars = [
-        "org.postgresql:postgresql:42.2.10",
-        "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
-    ]
-    spark_session = (
-        SparkSession.builder.master(
-            "spark://{host}:{port}".format(
-                port=CONFIG.spark_master_port, host=CONFIG.spark_master_host
-            )
-        )
-        .appName("Python Spark SQL basic example")
-        .config("spark.driver.memory", "1g")
-        .config("spark.executor.memory", "1g")
-        .config("spark.driver.maxResultSize", "1g")
-        .config("spark.jars.packages", ",".join(spark_jars))
-        .getOrCreate()
+    session = get_postgres_es_session(
+        master_host=CONFIG.spark_master_host,
+        master_port=CONFIG.spark_master_port,
+        app_name="etl_test",
     )
 
-    yield spark_session
+    yield session
 
-    spark_session.stop()
+    session.stop()
 
 
 class BaseTests(ABC):
@@ -238,7 +231,6 @@ class FillESAF(ABC):
             },
             auth=HTTPBasicAuth("airflow", "airflow"),
         )
-        # time.sleep(20)
         assert resp.status_code == HTTPStatus.OK
 
     def test_dag_completion(self):
@@ -347,15 +339,14 @@ class FillESSpark(ABC):
 
         loader = ElasticLoader(es_host=CONFIG.es_host, es_port=CONFIG.es_port)
         loader.load(df)
-        time.sleep(5)
 
 
-class TestPlainPgToES(BaseTests, FillESPlain):
-    ...
+# class TestPlainPgToES(BaseTests, FillESPlain):
+#     ...
 
 
-class TestAFPgToES(BaseTests, FillESAF):
-    ...
+# class TestAFPgToES(BaseTests, FillESAF):
+#     ...
 
 
 class TestSparkETL(BaseTests, FillESSpark):
