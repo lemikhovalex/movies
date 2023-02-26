@@ -325,10 +325,10 @@ class FillESSpark(ABC):
                 '[]'
             ) as genres
             from content.film_work as fw
-            join content.genre_film_work as g_fw on g_fw.film_work_id = fw.id
-            join content.genre as g on g.id = g_fw.genre_id
-            join content.person_film_work as p_fw on p_fw.film_work_id = fw.id
-            join content.person as p on p_fw.person_id = p.id
+            full join content.genre_film_work as g_fw on g_fw.film_work_id = fw.id
+            full join content.genre as g on g.id = g_fw.genre_id
+            full join content.person_film_work as p_fw on p_fw.film_work_id = fw.id
+            full join content.person as p on p_fw.person_id = p.id
             group by fw.id
         """
 
@@ -337,16 +337,18 @@ class FillESSpark(ABC):
         transformer = FilmWorkTransformer()
         df = transformer.transform(df=df)
 
-        loader = ElasticLoader(es_host=CONFIG.es_host, es_port=CONFIG.es_port)
+        loader = ElasticLoader(
+            es_host=CONFIG.es_host, es_port=CONFIG.es_port, index_name="movies"
+        )
         loader.load(df)
 
 
-# class TestPlainPgToES(BaseTests, FillESPlain):
-#     ...
+class TestPlainPgToES(BaseTests, FillESPlain):
+    ...
 
 
-# class TestAFPgToES(BaseTests, FillESAF):
-#     ...
+class TestAFPgToES(BaseTests, FillESAF):
+    ...
 
 
 class TestSparkETL(BaseTests, FillESSpark):

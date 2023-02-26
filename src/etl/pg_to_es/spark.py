@@ -68,9 +68,11 @@ class FilmWorkTransformer:
                 c,
                 from_json(
                     getattr(df, c),
-                    MapType(
-                        StringType(),
-                        StringType(),
+                    ArrayType(
+                        MapType(
+                            StringType(),
+                            StringType(),
+                        )
                     ),
                 ),
             )
@@ -87,13 +89,17 @@ class FilmWorkTransformer:
 
 class ElasticLoader:
     def __init__(
-        self, es_host: str, es_port: int, config: dict[str, str] | None = None
+        self,
+        es_host: str,
+        es_port: int,
+        index_name: str,
+        config: dict[str, str] | None = None,
     ):
         self.es_host = es_host
         self.es_port = es_port
         if config is None:
             self.config = {
-                "es.Resource": "movies",
+                "es.Resource": index_name,
                 "es.http.timeout": "10000m",
                 "es.nodes.wan.only": "true",
                 "es.batch.write.retry.count": "15",
