@@ -1,24 +1,48 @@
 import datetime
 import time
+import typing as tp
 import urllib.parse
 from abc import ABC
-from collections import OrderedDict
 from http import HTTPStatus
 
 import pytest
 import requests
 from elasticsearch import Elasticsearch
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json
-from pyspark.sql.types import ArrayType, MapType, StringType
 from requests.auth import HTTPBasicAuth
 
 from etl.config import CONFIG
 from etl.pg_to_es.extracters import IPEMExtracter, TargetExtracer
 from etl.pg_to_es.loaders import Loader
 from etl.pg_to_es.pipelines import MoviesETL
+from etl.pg_to_es.spark import ElasticLoader, FilmWorkTransformer, PostgreExtractor
 from etl.pg_to_es.transformers import PgToESTransformer
 from etl.state import BaseUniqueStorage
+
+
+@pytest.fixture(scope="class")
+def spark_session() -> tp.Generator[SparkSession, None, None]:
+    spark_jars = [
+        "org.postgresql:postgresql:42.2.10",
+        "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
+    ]
+    spark_session = (
+        SparkSession.builder.master(
+            "spark://{host}:{port}".format(
+                port=CONFIG.spark_master_port, host=CONFIG.spark_master_host
+            )
+        )
+        .appName("Python Spark SQL basic example")
+        .config("spark.driver.memory", "1g")
+        .config("spark.executor.memory", "1g")
+        .config("spark.driver.maxResultSize", "1g")
+        .config("spark.jars.packages", ",".join(spark_jars))
+        .getOrCreate()
+    )
+
+    yield spark_session
+
+    spark_session.stop()
 
 
 class BaseTests(ABC):
@@ -239,26 +263,16 @@ class FillESAF(ABC):
 
 
 class FillESSpark(ABC):
-    def test_spark_etl(self, request):
+    def test_spark_etl(self, request, spark_session: SparkSession):
         request.getfixturevalue("pg_conn")
         request.getfixturevalue("es_factory")
-        spark_jars = [
-            # "org.apache.hadoop:hadoop-aws:3.3.1",
-            "org.postgresql:postgresql:42.2.10",
-            "org.elasticsearch:elasticsearch-spark-30_2.12:8.6.2",
-        ]
-        spark_session = (
-            SparkSession.builder.master(
-                "spark://{host}:{port}".format(
-                    port=CONFIG.spark_master_port, host=CONFIG.spark_master_host
-                )
-            )
-            .appName("Python Spark SQL basic example")
-            .config("spark.driver.memory", "1g")
-            .config("spark.executor.memory", "1g")
-            .config("spark.driver.maxResultSize", "1g")
-            .config("spark.jars.packages", ",".join(spark_jars))
-            .getOrCreate()
+        extracter = PostgreExtractor(
+            session=spark_session,
+            db_host=CONFIG.db_host,
+            db_port=CONFIG.db_port,
+            db_user=CONFIG.db_user,
+            db_password=CONFIG.db_password,
+            db_name=CONFIG.db_name,
         )
         query = """
             select
@@ -326,69 +340,13 @@ class FillESSpark(ABC):
             group by fw.id
         """
 
-        dbDataFrame = (
-            spark_session.read.format("jdbc")
-            .option(
-                "url", f"jdbc:postgresql://{CONFIG.db_host}:{CONFIG.db_port}/movies"
-            )
-            .option("driver", "org.postgresql.Driver")
-            .option("user", CONFIG.db_user)
-            .option("password", CONFIG.db_password)
-            .option(
-                "query",
-                query,
-            )
-        )
+        df = extracter.extract(query=query)
 
-        print(2)
-        dbDataFrame = dbDataFrame.load()
-        print(3)
-        for c in ["actors", "writers", "genres", "directors"]:
-            dbDataFrame = dbDataFrame.withColumn(
-                c,
-                from_json(
-                    getattr(dbDataFrame, c),
-                    MapType(
-                        StringType(),
-                        StringType(),
-                    ),
-                ),
-            )
-        for c in ["genres_names", "directors_names", "actors_names", "writers_names"]:
-            dbDataFrame = dbDataFrame.withColumn(
-                c,
-                from_json(
-                    getattr(dbDataFrame, c),
-                    ArrayType(StringType()),
-                ),
-            )
+        transformer = FilmWorkTransformer()
+        df = transformer.transform(df=df)
 
-        # Write the result into ES
-        options = OrderedDict()
-        options["es.nodes"] = CONFIG.es_host
-        options["es.port"] = str(CONFIG.es_port)
-        options["es.Resource"] = "movies"
-        # Connect the timeout time setting of the ES. Default 1M
-        options["es.http.timeout"] = "10000m"
-        options["es.nodes.wan.only"] = "true"
-        # Default retry 3 times, if the negative value is an unlimited retry (careful)
-        options["es.batch.write.retry.count"] = "15"
-        # Default Retry Waiting Time is 10s
-        options["es.batch.write.retry.wait"] = "60"
-        # The following parameters can control the amount and number
-        # of data quantities and
-        # numbers written in a single batch (two choices)
-        options["es.batch.size.bytes"] = "1mb"
-        options["es.batch.size.entries"] = "64"
-        options["es.batch.write.refresh"] = "true"
-
-        # # elasticsearch-spark-20_2.10-7.17.9.jar
-        _ = (
-            dbDataFrame.write.format("org.elasticsearch.spark.sql")
-            .options(**options)
-            .mode("append")
-            .save()
-        )
+        loader = ElasticLoader(es_host=CONFIG.es_host, es_port=CONFIG.es_port)
+        loader.load(df)
         time.sleep(5)
 
 
