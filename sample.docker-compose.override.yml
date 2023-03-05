@@ -1,21 +1,21 @@
 version: '3.9'
 
-x-airflow-common:
-  restart: "no"
-  volumes:
-    - ./src/etl:/srv/app/src/etl
-    - ./src/airflow:/srv/app/src/airflow
-    - ./tests:/srv/app/tests
-
 services:
+  admin_db:
+    restart: "no"
+    ports:
+      - ${DB_PORT}:${DB_PORT}
   admin_panel:
     volumes:
       - ./src/admin_panel:/app/src/admin_panel
     ports:
       - ${ADMIN_PORT}:${ADMIN_PORT}
 
-  admin_db:
-    restart: "no"
+  airflow-worker:
+    volumes:
+      - ./src/etl:/srv/app/src/etl
+      - ./src/airflow:/srv/app/src/airflow
+      - ./tests:/srv/app/tests
 
   redis:
     restart: "no"
@@ -27,8 +27,8 @@ services:
     environment:
       UVICORN_RELOAD: 1
       DEBUG: 1
-    ports:
-      - ${MOVIES_API_PORT}:${MOVIES_API_PORT}
+      MOVIES_API_PORT: ${MOVIES_API_PORT}
     volumes:
-      - ./src/movies_api/:/app/
+      - ./src/movies_api:/app/src
+      - ./tests/api:/app/tests/api
     command: python main.py
