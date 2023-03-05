@@ -106,7 +106,7 @@ services:
       dockerfile: ./etc/compose/movies_api/Dockerfile
       context: .
     environment:
-      - GUNICORN_CMD_ARGS
+      MOVIES_API_PORT: ${MOVIES_API_PORT}
 
   redis:
     image: redis:6-alpine
@@ -159,9 +159,7 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
-    command: webserver
-    expose:
-      - ${AF_PORT}
+    command: webserver -p ${AF_PORT}
     healthcheck:
       test:
         [
@@ -174,6 +172,8 @@ services:
       timeout: 10s
       retries: 10
     restart: always
+    environment:
+      <<: *airflow-common-env
 
   airflow-scheduler:
     <<: *airflow-common
@@ -197,12 +197,19 @@ services:
     environment:
       ADMIN_PORT: ${ADMIN_PORT}
       AF_PORT: ${AF_PORT}
+      API_PORT: ${MOVIES_API_PORT}
+      DOLLAR: "$"
     ports:
-      - 70:70
+      - 80:80
     depends_on:
       - admin_panel
       - airflow-webserver
       - movies_api
+    command: >
+      /bin/bash -c "
+        envsubst < /etc/nginx/conf.d/servers.conf.template > /etc/nginx/conf.d/servers.conf &&
+        nginx -g 'daemon off;'
+      "
 
   spark-master:
     build:

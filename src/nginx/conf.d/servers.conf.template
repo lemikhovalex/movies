@@ -8,11 +8,11 @@ server {
     root /data;
 
     location @backend {
-        proxy_pass http://admin_panel:8002;
+        proxy_pass http://admin_panel:$ADMIN_PORT;
     }
 
     location /admin/ {
-        try_files $uri $uri/ @backend;
+        try_files ${DOLLAR}uri ${DOLLAR}uri/ @backend;
     }
 
     location /admin/static/ {
@@ -22,12 +22,12 @@ server {
     }
 
     location /airflow/ {
-      proxy_pass http://airflow-webserver:8081;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header Host $http_host;
+      proxy_pass http://airflow-webserver:$AF_PORT;
+      proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
+      proxy_set_header Host ${DOLLAR}http_host;
       proxy_redirect off;
       proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Upgrade ${DOLLAR}http_upgrade;
       proxy_set_header Connection "upgrade";
   }
 
@@ -38,7 +38,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://movies_api:8007;
+        proxy_pass http://movies_api:$API_PORT;
     }
 
 }
