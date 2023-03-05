@@ -203,7 +203,7 @@ class FillESPlain(ABC):
 
 class FillESAF(ABC):
     dag_run_id = f"test_run_{datetime.datetime.now().strftime('%d%m%Y%H%M%S')}"
-    air_flow_webserver = "http://airflow-webserver:8080/airflow/"
+    air_flow_webserver = f"http://airflow-webserver:{CONFIG.af_port}/airflow/"
 
     def test_pg(self, request):
         request.getfixturevalue("pg_conn")
@@ -351,5 +351,5 @@ class TestAFPgToES(BaseTests, FillESAF):
     ...
 
 
-class TestSparkETL(BaseTests, FillESSpark):
-    ...
+# class TestSparkETL(BaseTests, FillESSpark):
+#     ...

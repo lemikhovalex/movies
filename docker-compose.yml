@@ -42,6 +42,7 @@ x-airflow-common:
     AF_PORT: ${AF_PORT}
     SPARK_MASTER_HOST: ${SPARK_MASTER_HOST}
     SPARK_MASTER_PORT: ${SPARK_MASTER_PORT}
+    REDIS_PORT: ${REDIS_PORT}
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
@@ -52,8 +53,6 @@ x-airflow-common:
     - ./src/etl:/srv/app/src/etl
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
-    redis:
-      condition: service_healthy
     af_db:
       condition: service_healthy
 
@@ -109,15 +108,27 @@ services:
       MOVIES_API_PORT: ${MOVIES_API_PORT}
 
   redis:
-    image: redis:6-alpine
+    image: redis:6
+    environment:
+      - PORT:${REDIS_PORT}
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "--raw",
+          "incr",
+          "-p",
+          "${PORT}",
+          "ping"
+        ]
       interval: 5s
       timeout: 30s
       retries: 50
     restart: always
+    command: /bin/bash -c "redis-server --port ${REDIS_PORT}"
 
   af_db:
     image: postgres:13-alpine
