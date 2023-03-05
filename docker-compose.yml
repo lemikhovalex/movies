@@ -75,6 +75,7 @@ services:
   elasticsearch:
     image: elasticsearch:8.6.2
     environment:
+      http.port: ${ES_PORT}-9300
       cluster.routing.allocation.disk.threshold_enabled: false
       xpack.security.enabled: false
       discovery.type: single-node
