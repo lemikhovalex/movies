@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-dev \
     pkg-config \
     wget \
-    software-properties-common
-RUN apt-get update \
+    software-properties-common \
+    && apt-get update \
     && apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' \
     && apt-get update \
     && apt-get install openjdk-8-jdk -y

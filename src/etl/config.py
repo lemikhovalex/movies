@@ -17,7 +17,7 @@ class Config(BaseSettings):
     spark_master_port: int
 
     af_port: int
-    redis_port: int = 6379
+    redis_port: int
     redis_host: str = "redis"
     logger_path: Optional[str] = None
 

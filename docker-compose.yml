@@ -42,6 +42,7 @@ x-airflow-common:
     AF_PORT: ${AF_PORT}
     SPARK_MASTER_HOST: ${SPARK_MASTER_HOST}
     SPARK_MASTER_PORT: ${SPARK_MASTER_PORT}
+    REDIS_PORT: ${REDIS_PORT}
     <<: *admin-db-common-env
     <<: *es-common-env
   volumes:
@@ -52,8 +53,6 @@ x-airflow-common:
     - ./src/etl:/srv/app/src/etl
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
-    redis:
-      condition: service_healthy
     af_db:
       condition: service_healthy
 
@@ -76,6 +75,7 @@ services:
   elasticsearch:
     image: elasticsearch:8.6.2
     environment:
+      http.port: ${ES_PORT}-9300
       cluster.routing.allocation.disk.threshold_enabled: false
       xpack.security.enabled: false
       discovery.type: single-node
@@ -106,18 +106,30 @@ services:
       dockerfile: ./etc/compose/movies_api/Dockerfile
       context: .
     environment:
-      - GUNICORN_CMD_ARGS
+      MOVIES_API_PORT: ${MOVIES_API_PORT}
 
   redis:
-    image: redis:6-alpine
+    image: redis:6
+    environment:
+      - PORT:${REDIS_PORT}
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "--raw",
+          "incr",
+          "-p",
+          "${PORT}",
+          "ping"
+        ]
       interval: 5s
       timeout: 30s
       retries: 50
     restart: always
+    command: /bin/bash -c "redis-server --port ${REDIS_PORT}"
 
   af_db:
     image: postgres:13-alpine
@@ -159,9 +171,7 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
-    command: webserver
-    expose:
-      - ${AF_PORT}
+    command: webserver -p ${AF_PORT}
     healthcheck:
       test:
         [
@@ -174,6 +184,8 @@ services:
       timeout: 10s
       retries: 10
     restart: always
+    environment:
+      <<: *airflow-common-env
 
   airflow-scheduler:
     <<: *airflow-common
@@ -197,39 +209,47 @@ services:
     environment:
       ADMIN_PORT: ${ADMIN_PORT}
       AF_PORT: ${AF_PORT}
+      API_PORT: ${MOVIES_API_PORT}
+      DOLLAR: "$"
+      NGINX_PORT: ${NGINX_PORT}
     ports:
-      - 70:70
+      - ${NGINX_PORT}:${NGINX_PORT}
     depends_on:
       - admin_panel
       - airflow-webserver
       - movies_api
+    command: >
+      /bin/bash -c "
+        envsubst < /etc/nginx/conf.d/servers.conf.template > /etc/nginx/conf.d/servers.conf &&
+        nginx -g 'daemon off;'
+      "
 
-  spark-master:
-    build:
-      context: .
-      dockerfile: ./etc/compose/spark/Dockerfile
-    hostname: spark-master
-    ports:
-      - ${SPARK_MASTER_WEBUI_PORT}:${SPARK_MASTER_WEBUI_PORT}
-      - ${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}
-    environment:
-      - SPARK_LOCAL_IP=spark-master
-      - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}
-      - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT}
-    command: "/start-master.sh"
+spark-master:
+  build:
+    context: .
+    dockerfile: ./etc/compose/spark/Dockerfile
+  hostname: spark-master
+  ports:
+    - ${SPARK_MASTER_WEBUI_PORT}:${SPARK_MASTER_WEBUI_PORT}
+    - ${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}
+  environment:
+    - SPARK_LOCAL_IP=spark-master
+    - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}
+    - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT}
+  command: "/start-master.sh"
 
-  spark-worker:
-    build:
-      context: .
-      dockerfile: ./etc/compose/spark/Dockerfile
-    depends_on:
-      - spark-master
-    ports:
-      - ${SPARK_WORKER_WEBUI_PORT}
-    environment:
-      - SPARK_MASTER=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_WEBUI_PORT}
-    command: "/start-worker.sh"
+spark-worker:
+  build:
+    context: .
+    dockerfile: ./etc/compose/spark/Dockerfile
+  depends_on:
+    - spark-master
+  ports:
+    - ${SPARK_WORKER_WEBUI_PORT}
+  environment:
+    - SPARK_MASTER=spark://spark-master:${SPARK_MASTER_PORT}
+    - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_WEBUI_PORT}
+  command: "/start-worker.sh"
 
 volumes:
   admin_db_vol:
