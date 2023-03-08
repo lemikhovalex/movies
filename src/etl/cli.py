@@ -137,10 +137,22 @@ def fill_es_from_q(queue: str, batch_size: int):
             etl.run()
 
 
+@click.command()
+@click.option("--queue", type=str)
+def clean_q(queue: str) -> None:
+    with redis.Redis(
+        port=CONFIG.redis_port,
+        host=CONFIG.redis_host,
+        decode_responses=True,
+    ) as redis_conn:
+        redis_conn.delete(queue)
+
+
 messages.add_command(hello)
 messages.add_command(fill_base_q)
 messages.add_command(fill_q_from_q)
 messages.add_command(fill_es_from_q)
+messages.add_command(clean_q)
 
 if __name__ == "__main__":
     messages()
