@@ -38,7 +38,7 @@ class MoviesApiMixin:
             directors=get_person_names_aggregation(role="director"),
         )
 
-        return out  # Сформированный QuerySet
+        return out
 
     def render_to_response(self, context, **response_kwargs):
         return JsonResponse(context)

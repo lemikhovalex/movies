@@ -29,7 +29,7 @@ def event_loop():
 @pytest_asyncio.fixture(scope="session")
 async def es_client() -> AsyncGenerator[AsyncElasticsearch, None]:
     """
-    Создаёт файл и удаляет его, даже если сам тест упал в ошибку
+    creates indexes, yields connection, clear indexes
     """
     url = f"http://{SETTINGS.es_host}:{SETTINGS.es_port}"
     es = AsyncElasticsearch(url)
