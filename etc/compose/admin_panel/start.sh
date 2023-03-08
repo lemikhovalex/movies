@@ -6,6 +6,8 @@
     ; python manage.py collectstatic --noinput \
     ; python manage.py migrate \
 
+python manage.py compilemessages || echo "msg comilation failed"
+
 python manage.py createsuperuser --noinput || echo "SU creation failed"
 
 gunicorn config.wsgi:application --bind admin:$ADMIN_PORT --workers 1 --reload
