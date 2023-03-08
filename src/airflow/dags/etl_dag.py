@@ -84,7 +84,7 @@ with models.DAG(
                         "cd /srv/app/src/etl/ && python cli.py fill-q-from-q",
                         f"--extracter=FilmworkExtracter --batch-size={batch_size}",
                         f"--source-queue={queue_name}-{XComArg(init_node, key='id')}",
-                        "--target-queue=fw-{XComArg(init_node, key='id')}",
+                        f"--target-queue=fw-{XComArg(init_node, key='id')}",
                     ]
                 ),
                 dag=dag,
