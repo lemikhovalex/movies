@@ -21,16 +21,14 @@ class TimeStampedMixin(models.Model):
     created and modified
     """
 
-    # auto_now_add автоматически выставит дату создания записи
+    # auto_now_add automatically on creation
     created = models.DateTimeField(_("created"), auto_now_add=True)
-    # auto_now изменятся при каждом обновлении записи
+    # auto_now automatically on modification
     modified = models.DateTimeField(_("modified"), auto_now=True)
 
     class Meta(object):
         """
-        Этот параметр указывает Django.
-
-        что этот класс не является представлением таблицы
+        Make class abstract, not a real table in DB
         """
 
         abstract = True
@@ -44,29 +42,18 @@ class UUIDMixin(models.Model):
 
 
 class Genre(TimeStampedMixin, UUIDMixin):
-    """
-    Типичная модель в Django использует число в качестве id.
 
-    В таких ситуациях поле не описывается в модели.
-    Вам же придётся явно объявить primary key.
-    """
-
-    # Первым аргументом обычно идёт человеко-читаемое название поля
     name = models.CharField(_("title"), max_length=GENRE_NAME_LEN)
-    # blank=True делает поле необязательным для заполнения.
     description = models.TextField(_("description"), blank=True, null=True)
 
     class Meta(object):
         """
-        Ваши таблицы находятся в нестандартной схеме.
-
-        Это нужно указать в классе модели
+        specify db_table because it is not in a standard scheme
         """
 
         db_table = 'content"."genre'
-        # Следующие два поля отвечают за название модели в интерфейсе
-        verbose_name = "жанр"
-        verbose_name_plural = "жанры"
+        verbose_name = _("genre")
+        verbose_name_plural = _("genres")
         constraints = [models.UniqueConstraint(fields=["name"], name="uniq genre name")]
 
     def __str__(self):
@@ -79,20 +66,14 @@ class Person(TimeStampedMixin, UUIDMixin):
 
     class Meta(object):
         db_table = 'content"."person'
-        verbose_name = "артист"
-        verbose_name_plural = "артисты"
+        verbose_name = _("person")
+        verbose_name_plural = _("persons")
 
     def __str__(self):
         return self.full_name
 
 
 class Filmwork(TimeStampedMixin, UUIDMixin):
-    """
-    Типичная модель в Django использует число в качестве id.
-
-    В таких ситуациях поле не описывается в модели.
-    Вам же придётся явно объявить primary key.
-    """
 
     certificate = models.TextField(_("certificate"), blank=True, null=True)
     file_path = models.TextField(_("file_path"), blank=True, null=True)
@@ -110,16 +91,10 @@ class Filmwork(TimeStampedMixin, UUIDMixin):
     persons = models.ManyToManyField(Person, through="PersonFilmwork")
 
     class Meta(object):
-        """
-        Ваши таблицы находятся в нестандартной схеме.
-
-        Это нужно указать в классе модели
-        """
 
         db_table = 'content"."film_work'
-        # Следующие два поля отвечают за название модели в интерфейсе
-        verbose_name = "Кинопроизведение"
-        verbose_name_plural = "Кинопроизведения"
+        verbose_name = _("film-work")
+        verbose_name_plural = _("film-works")
 
     def __str__(self):
         return self.title
@@ -128,7 +103,7 @@ class Filmwork(TimeStampedMixin, UUIDMixin):
 class GenreFilmwork(UUIDMixin):
     """ORM for table Genre-Filmwork.
 
-    provides many-to-many realtion
+    provides many-to-many relation
     """
 
     film_work = models.ForeignKey(
@@ -145,8 +120,8 @@ class GenreFilmwork(UUIDMixin):
 
     class Meta(object):
         db_table = 'content"."genre_film_work'
-        verbose_name = "жанр"
-        verbose_name_plural = "жанры"
+        verbose_name = _("genre-of-a-film-work")
+        verbose_name_plural = _("genres-of-a-film-work")
 
 
 class PersonFilmwork(UUIDMixin):
@@ -169,8 +144,8 @@ class PersonFilmwork(UUIDMixin):
 
     class Meta(object):
         db_table = 'content"."person_film_work'
-        verbose_name = "Артист в кинопроизведении"
-        verbose_name_plural = "Артисты в кинопроизведении"
+        verbose_name = _("person-of-a-film-work")
+        verbose_name_plural = _("persons-of-a-film-work")
         constraints = [
             models.UniqueConstraint(
                 fields=["role", "person_id", "film_work_id"],

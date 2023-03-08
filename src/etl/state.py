@@ -21,12 +21,12 @@ else:
 class BaseStateStorage:
     @abc.abstractmethod
     def save_state(self, state: dict) -> None:
-        """Сохранить состояние в постоянное хранилище"""
+        """save state to storage"""
         pass
 
     @abc.abstractmethod
     def retrieve_state(self) -> dict:
-        """Загрузить состояние локально из постоянного хранилища"""
+        """get state from storage"""
         pass
 
 
@@ -61,24 +61,20 @@ class GenericFileStorage(BaseStateStorage):
 
 class State:
     """
-    Класс для хранения состояния при работе с данными, чтобы постоянно не
-    перечитывать данные с начала.
-    Здесь представлена реализация с сохранением состояния в файл.
-    В целом ничего не мешает поменять это поведение на работу с
-    БД или распределённым хранилищем.
+    Class  to work with records of internal processes.
+    For example to avoid ETL start from beginning.
+    This is realization with storing data to file.
     """
 
     def __init__(self, storage: BaseStateStorage):
         self.storage = storage
 
     def set_state(self, key: str, value: Any) -> None:
-        """Установить состояние для определённого ключа"""
         state = self.storage.retrieve_state()
         state[key] = value
         self.storage.save_state(state)
 
     def get_state(self, key: str) -> Any:
-        """Получить состояние по определённому ключу"""
         state = self.storage.retrieve_state()
         out = None
         try:

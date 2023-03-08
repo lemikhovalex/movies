@@ -122,7 +122,7 @@ services:
           "--raw",
           "incr",
           "-p",
-          "${PORT}",
+          "${REDIS_PORT}",
           "ping"
         ]
       interval: 5s
@@ -224,32 +224,32 @@ services:
         nginx -g 'daemon off;'
       "
 
-spark-master:
-  build:
-    context: .
-    dockerfile: ./etc/compose/spark/Dockerfile
-  hostname: spark-master
-  ports:
-    - ${SPARK_MASTER_WEBUI_PORT}:${SPARK_MASTER_WEBUI_PORT}
-    - ${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}
-  environment:
-    - SPARK_LOCAL_IP=spark-master
-    - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}
-    - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT}
-  command: "/start-master.sh"
+  spark-master:
+    build:
+      context: .
+      dockerfile: ./etc/compose/spark/Dockerfile
+    hostname: spark-master
+    ports:
+      - ${SPARK_MASTER_WEBUI_PORT}:${SPARK_MASTER_WEBUI_PORT}
+      - ${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}
+    environment:
+      - SPARK_LOCAL_IP=spark-master
+      - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}
+      - SPARK_MASTER_WEBUI_PORT=${SPARK_MASTER_WEBUI_PORT}
+    command: "/start-master.sh"
 
-spark-worker:
-  build:
-    context: .
-    dockerfile: ./etc/compose/spark/Dockerfile
-  depends_on:
-    - spark-master
-  ports:
-    - ${SPARK_WORKER_WEBUI_PORT}
-  environment:
-    - SPARK_MASTER=spark://spark-master:${SPARK_MASTER_PORT}
-    - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_WEBUI_PORT}
-  command: "/start-worker.sh"
+  spark-worker:
+    build:
+      context: .
+      dockerfile: ./etc/compose/spark/Dockerfile
+    depends_on:
+      - spark-master
+    ports:
+      - ${SPARK_WORKER_WEBUI_PORT}
+    environment:
+      - SPARK_MASTER=spark://spark-master:${SPARK_MASTER_PORT}
+      - SPARK_WORKER_WEBUI_PORT=${SPARK_WORKER_WEBUI_PORT}
+    command: "/start-worker.sh"
 
 volumes:
   admin_db_vol:

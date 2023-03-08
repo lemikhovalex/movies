@@ -23,9 +23,7 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup():
     """
-    Подключаемся к базам при старте сервера
-    Подключиться можем при работающем event-loop
-    Поэтому логика подключения происходит в асинхронной функции
+    connect to data bases at application start
     """
     redis.redis = await aioredis.from_url(
         f"redis://{config.REDIS_HOST}:{config.REDIS_PORT}"
@@ -40,7 +38,7 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     """
-    Отключаемся от баз при выключении сервера
+    close connection before exiting app
     """
     await redis.redis.close()
     await elastic.es.close()

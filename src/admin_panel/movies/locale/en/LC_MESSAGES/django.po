@@ -20,80 +20,80 @@ msgstr ""
 
 #: .\movies\apps.py:16
 msgid "movies"
-msgstr ""
+msgstr "Movies"
 
 #: .\movies\model_choises.py:6
 msgid "type_movie"
-msgstr ""
+msgstr "Movie type"
 
 #: .\movies\model_choises.py:7
 msgid "type_tv_show"
-msgstr ""
+msgstr "TV show"
 
 #: .\movies\model_choises.py:11
 msgid "Writer"
-msgstr ""
+msgstr "Writer"
 
 #: .\movies\model_choises.py:12
 msgid "Actor"
-msgstr ""
+msgstr "Actor"
 
 #: .\movies\model_choises.py:13
 msgid "Director"
-msgstr ""
+msgstr "Director"
 
 #: .\movies\models.py:25 .\movies\models.py:166
 msgid "created"
-msgstr ""
+msgstr "created"
 
 #: .\movies\models.py:27
 msgid "modified"
-msgstr ""
+msgstr "modified"
 
 #: .\movies\models.py:55 .\movies\models.py:98
 msgid "title"
-msgstr ""
+msgstr "title"
 
 #: .\movies\models.py:57 .\movies\models.py:99
 msgid "description"
-msgstr ""
+msgstr "description"
 
 #: .\movies\models.py:76
 msgid "full name"
-msgstr ""
+msgstr "full name"
 
 #: .\movies\models.py:77
 msgid "birth_date"
-msgstr ""
+msgstr "birth date"
 
 #: .\movies\models.py:96
 msgid "certificate"
-msgstr ""
+msgstr "certificate"
 
 #: .\movies\models.py:97
 msgid "file_path"
-msgstr ""
+msgstr "file path"
 
 #: .\movies\models.py:100
 msgid "creation_date"
-msgstr ""
+msgstr "creation date"
 
 #: .\movies\models.py:102
 msgid "rating"
-msgstr ""
+msgstr "rating"
 
 #: .\movies\models.py:106
 msgid "type"
-msgstr ""
+msgstr "type"
 
 #: .\movies\models.py:135 .\movies\models.py:140 .\movies\models.py:154
 msgid "film_work"
-msgstr ""
+msgstr "film-work"
 
 #: .\movies\models.py:159
 msgid "artist"
-msgstr ""
+msgstr "artist"
 
 #: .\movies\models.py:162
 msgid "role"
-msgstr ""
+msgstr "role"
