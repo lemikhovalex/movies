@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     wget \
     software-properties-common \
     && apt-get update \
-    && apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' \
+    && apt-add-repository 'deb http://archive.debian.org/debian-security stretch/updates main' \
     && apt-get update \
     && apt-get install openjdk-8-jdk -y
 
